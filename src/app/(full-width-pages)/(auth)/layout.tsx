@@ -43,24 +43,26 @@ export default function AuthLayout({
             {/* Branding Content */}
             <div className="absolute bottom-16 left-1/2 z-20 w-full max-w-xs -translate-x-1/2 text-center">
               <Link href="/" className="mb-4 inline-block">
-                <Image
+                {/* <Image
                   width={200}
                   height={40}
                   src="/images/logo/auth-logo.svg"
                   alt="Logo"
-                />
+                /> */}
+                <h1 className="text-white text-4xl">
+                Affair Escorts
+                </h1>
+                
               </Link>
 
-              <p className="text-sm text-gray-300">
-                Discreet • Elegant • Premium Companionship
-              </p>
+              
             </div>
           </div>
 
           {/* THEME TOGGLER */}
-          <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
+          {/* <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
             <ThemeTogglerTwo />
-          </div>
+          </div> */}
 
         </div>
       </ThemeProvider>

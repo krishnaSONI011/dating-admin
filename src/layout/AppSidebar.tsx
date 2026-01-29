@@ -55,6 +55,15 @@ const navItems: NavItem[] = [
     // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
     path: "/basic-tables"
   },
+  {
+    name: "Seo Tools",
+    icon: <PageIcon />,
+    subItems: [{ name: "Homepage Setting", path: "/seo-tools/homepage", pro: false },
+      {name : "Pages setting" , path:"/seo-tools/page", pro:false},
+      {name : "Locations" , path:"/seo-tools/locations", pro:false}
+    ],
+    
+  },
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,
@@ -317,7 +326,7 @@ const AppSidebar: React.FC = () => {
                 width={150}
                 height={40}
               /> */}
-              <h1 className="text-2xl text-white ">Escort Service</h1>
+              <h1 className="text-2xl text-white ">Affair Escorts</h1>
             </>
           ) : (
             // <Image
@@ -326,7 +335,7 @@ const AppSidebar: React.FC = () => {
             //   width={32}
             //   height={32}
             // />
-            <h1 className="text-white text-xl">ES</h1>
+            <h1 className="text-white text-xl">AE</h1>
           )}
         </Link>
       </div>

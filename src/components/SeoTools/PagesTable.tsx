@@ -1,80 +1,25 @@
-import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-
-import Badge from "../ui/badge/Badge";
 import Image from "next/image";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
+import { useState } from "react";
+import Badge from "../ui/badge/Badge";
 import Button from "../ui/button/Button";
-
-interface Order {
-  id: number;
-  user: {
-    image: string;
-    name: string;
-    role: string;
-  };
-  projectName: string;
-  team: {
-    images: string[];
-  };
-  status: string;
-  budget: string;
-}
 
 interface Escort {
   id: number;
   name: string;
-  gender: string;
   image: string;
+  gender: string;
   city: string;
-  status: string;
+  status: "Active" | "Pending" | "Inactive";
 }
 
-// Define the table data using the interface
-const escortData: Escort[] = [
-  {
-    id: 1,
-    name: "Shaifali",
-    gender: "Female",
-    image: "/images/user/user-17.jpg",
-    city: "Indore",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Alina",
-    gender: "Female",
-    image: "/images/user/user-15.jpg",
-    city: "Mumbai",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    name: "Sakura",
-    gender: "Female",
-    image: "/images/user/user-14.jpg",
-    city: "Delhi",
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Alex",
-    gender: "Transgender",
-    image: "/images/user/user-12.jpg",
-    city: "Bangalore",
-    status: "Rejected",
-  },
-];
+export default function PagesTable(){
+    const [PageData , setPageData] = useState<Escort[]>([])
 
-
-export default function EscortTable() {
-  return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    const escortData: Escort[] = PageData;
+    return(
+        <>
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
         <Table>
 
@@ -149,7 +94,7 @@ export default function EscortTable() {
 
                 {/* Action */}
                 <TableCell className="px-5 py-4">
-                  <Button size="sm">View Profile</Button>
+                  <Button  size="sm">View Profile</Button>
                 </TableCell>
 
               </TableRow>
@@ -158,6 +103,7 @@ export default function EscortTable() {
         </Table>
       </div>
     </div>
-  );
+        
+        </>
+    )
 }
-

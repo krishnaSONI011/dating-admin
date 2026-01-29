@@ -35,6 +35,8 @@ export default function EscortProfilePage() {
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">
           Escort Profile
         </h2>
+<div className="flex gap-2">
+
 
         <Badge
           color={
@@ -47,6 +49,8 @@ export default function EscortProfilePage() {
         >
           {escort.status}
         </Badge>
+        <Badge>Gold User</Badge>
+        </div>
       </div>
 
       {/* IMAGE GALLERY */}
@@ -90,6 +94,22 @@ export default function EscortProfilePage() {
         <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
           {escort.description}
         </p>
+      </div>
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white/90">
+          Document
+        </h3>
+        <Image src={"/dummy.webp"} alt="dummy" width={300} height={400}/>
+      </div>
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-white/90">
+          Ad Timing
+        </h3>
+        <div className="grid grid-cols-4 gap-4">
+        <Badge>12 Am - 6Am</Badge>
+        <Badge>6 pm - 12Am</Badge>
+        </div>
+        
       </div>
 
       {/* ADMIN ACTIONS */}
