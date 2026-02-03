@@ -1,15 +1,69 @@
 "use client";
-import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import api, { loginApi } from "@/lib/api";
+import { EyeCloseIcon, EyeIcon } from "@/icons";
+import { useAppDispatch } from "../../../redux/hooks";
+import { login } from "../../../redux/slices/authSlices";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import React, { useState } from "react";
 
 export default function SignInForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      toast.error("Please enter email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // const user = await loginApi(email.trim(), password);
+      const user = await api.post("/Wb/login", { email, password });
+      console.log(user);
+      
+      if(user.data.status == 1){
+        toast.error(user.data.message);
+        return;
+      }
+      else{
+        toast.success("Signed in successfully.");
+        dispatch(login(user.data.data));
+        router.push("/");
+      }
+      
+    } catch (err: unknown) {
+      let message: string | null = null;
+      if (err && typeof err === "object" && "response" in err) {
+        const res = (err as { response?: { data?: Record<string, unknown> } })
+          .response?.data;
+        if (res && typeof res === "object") {
+          const msg =
+            res.message ?? res.error ?? res.msg ?? res.error_message;
+          if (typeof msg === "string") message = msg;
+          else if (Array.isArray(res.errors) && res.errors[0])
+            message = String(res.errors[0]);
+        }
+      }
+      const errorMsg =
+        message?.trim() ||
+        (err instanceof Error ? err.message : null) ||
+        "Sign in failed. Please check your credentials.";
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -84,13 +138,20 @@ export default function SignInForm() {
                 </span>
               </div>
             </div> */}
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input
+                    placeholder="info@gmail.com"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    disabled={loading}
+                  />
                 </div>
                 <div>
                   <Label>
@@ -100,6 +161,10 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      disabled={loading}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -128,8 +193,13 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full dark:bg-brown-300" size="sm">
-                    Sign in
+                  <Button
+                    type="submit"
+                    className="w-full dark:bg-brown-300"
+                    size="sm"
+                    disabled={loading}
+                  >
+                    {loading ? "Signing in…" : "Sign in"}
                   </Button>
                 </div>
               </div>

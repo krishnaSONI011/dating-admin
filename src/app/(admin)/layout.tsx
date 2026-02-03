@@ -4,8 +4,10 @@ import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
-import React from "react";
-
+import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
+import { useRouter } from "next/navigation";
 export default function AdminLayout({
   children,
 }: {
@@ -19,7 +21,15 @@ export default function AdminLayout({
     : isExpanded || isHovered
     ? "lg:ml-[290px]"
     : "lg:ml-[90px]";
+  const user = useSelector((state: RootState) => state.auth?.user);
+  const router = useRouter();
 
+  useEffect(() => {
+    if (user === null || user === undefined) {
+      router.push("/signin");
+    }
+  }, [user, router]);
+    
   return (
     <div className="min-h-screen xl:flex">
       {/* Sidebar and Backdrop */}

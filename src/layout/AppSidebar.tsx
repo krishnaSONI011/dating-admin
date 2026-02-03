@@ -9,6 +9,7 @@ import {
   CalenderIcon,
   ChevronDownIcon,
   GridIcon,
+  GroupIcon,
   HorizontaLDots,
   ListIcon,
   PageIcon,
@@ -43,7 +44,11 @@ const navItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
-
+  {
+    icon: <GroupIcon />,
+    name: "Users",
+    path: "/users",
+  },
   // {
   //   name: "Forms",
   //   icon: <ListIcon />,
