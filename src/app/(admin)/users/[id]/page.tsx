@@ -156,7 +156,7 @@ export default function UserProfilePage() {
                 size="sm"
                 className="bg-success-500 hover:bg-success-600 dark:bg-success-600"
                 onClick={handleApprove}
-                disabled={actionLoading || profile.is_approved === "1" || profile.is_approved === 1}
+                disabled={actionLoading || String(profile.is_approved) === "1"}
               >
                 Approve
               </Button>

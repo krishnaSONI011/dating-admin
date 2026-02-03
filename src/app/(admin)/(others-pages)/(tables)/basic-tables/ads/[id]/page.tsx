@@ -144,7 +144,7 @@ export default function AdDetailPage() {
   const services = detail.services ?? [];
   const images = detail.images ?? [];
   const currentMembership = (ads.membership || "Free") as Membership;
-  const isApproved = ads.is_approved === "1" || ads.is_approved === 1;
+  const isApproved = String(ads.is_approved) === "1";
 
   return (
     <div>
