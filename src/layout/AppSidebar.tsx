@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
+  BellIcon,
   BoxCubeIcon,
   CalenderIcon,
   ChevronDownIcon,
@@ -39,11 +40,7 @@ const navItems: NavItem[] = [
   //   name: "Calendar",
   //   path: "/calendar",
   // },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+  
   {
     icon: <GroupIcon />,
     name: "Users",
@@ -61,14 +58,28 @@ const navItems: NavItem[] = [
     path: "/basic-tables"
   },
   {
+    name: "Send Notification",
+    icon: <BellIcon />,
+    path: "/notifications",
+  },
+  {
     name: "Seo Tools",
     icon: <PageIcon />,
     subItems: [{ name: "Homepage Setting", path: "/seo-tools/homepage", pro: false },
-      {name : "Pages setting" , path:"/seo-tools/page", pro:false},
+      // {name : "Pages setting" , path:"/seo-tools/page", pro:false},
       {name : "Locations" , path:"/seo-tools/locations", pro:false}
     ],
     
   },
+  {
+    name: "Payment" ,
+    icon : <PageIcon />,
+    subItems: [{ name: "Coin Plan", path: "/payments/coin-plane", pro: false },
+      {name : "Pricing Setting" , path:"/payments/set-price", pro:false},
+     
+    ],
+
+  }
   // {
   //   name: "Pages",
   //   icon: <PageIcon />,

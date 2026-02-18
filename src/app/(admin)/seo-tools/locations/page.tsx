@@ -41,8 +41,16 @@ export default function LocationsPage() {
   const [expandedDescriptionId, setExpandedDescriptionId] = useState<string | null>(null);
   const [updatingCityId, setUpdatingCityId] = useState<string | null>(null);
 
-  const [stateForm, setStateForm] = useState({ name: "" });
-  const [localAreaForm, setLocalAreaForm] = useState({ name: "", description: "" });
+  const [stateForm, setStateForm] = useState<{
+    name: string;
+    description: string;
+    imageFile: File | null;
+  }>({ name: "", description: "", imageFile: null });
+  const [localAreaForm, setLocalAreaForm] = useState<{
+    name: string;
+    description: string;
+    imageFile: File | null;
+  }>({ name: "", description: "", imageFile: null });
   const [editForm, setEditForm] = useState<{
     name: string;
     description: string;
@@ -84,12 +92,24 @@ export default function LocationsPage() {
 
   const handleAddState = () => {
     const name = stateForm.name.trim();
-    if (!name) return;
+    const description = stateForm.description.trim();
+    if (!name) {
+      toast.error("State name is required.");
+      return;
+    }
+    if (!description) {
+      toast.error("State description is required.");
+      return;
+    }
+    if (!stateForm.imageFile) {
+      toast.error("State photo is required.");
+      return;
+    }
     setSavingState(true);
-    addStateApi(name)
+    addStateApi(name, description, stateForm.imageFile)
       .then(() => {
         toast.success("State added successfully.");
-        setStateForm({ name: "" });
+        setStateForm({ name: "", description: "", imageFile: null });
         setOpenStateModal(false);
         refetchLocations();
       })
@@ -108,10 +128,10 @@ export default function LocationsPage() {
       return;
     }
     setSavingCity(true);
-    addCityApi(selectedStateId, name, description)
+    addCityApi(selectedStateId, name, description, localAreaForm.imageFile ?? undefined)
       .then(() => {
         toast.success("City added successfully.");
-        setLocalAreaForm({ name: "", description: "" });
+        setLocalAreaForm({ name: "", description: "", imageFile: null });
         setOpenLocalAreaModal(false);
         setSelectedStateId(null);
         refetchLocations();
@@ -259,6 +279,24 @@ export default function LocationsPage() {
       setEditCityForm((prev) => ({ ...prev, imageFile: accepted[0] ?? null }));
     },
     disabled: !!updatingCityId,
+  });
+
+  const addCityImageDropzone = useDropzone({
+    accept: { "image/png": [], "image/jpeg": [], "image/webp": [], "image/gif": [] },
+    maxFiles: 1,
+    onDrop: (accepted) => {
+      setLocalAreaForm((prev) => ({ ...prev, imageFile: accepted[0] ?? null }));
+    },
+    disabled: !!savingCity,
+  });
+
+  const addStateImageDropzone = useDropzone({
+    accept: { "image/png": [], "image/jpeg": [], "image/webp": [], "image/gif": [] },
+    maxFiles: 1,
+    onDrop: (accepted) => {
+      setStateForm((prev) => ({ ...prev, imageFile: accepted[0] ?? null }));
+    },
+    disabled: !!savingState,
   });
 
   return (
@@ -502,16 +540,16 @@ export default function LocationsPage() {
         </div>
       )}
 
-      {/* Add State Modal */}
+      {/* Add State Modal – same description and image as Edit State */}
       <Modal
         isOpen={openStateModal}
         onClose={() => {
           setOpenStateModal(false);
-          setStateForm({ name: "" });
+          setStateForm({ name: "", description: "", imageFile: null });
         }}
         showCloseButton={true}
       >
-        <div className="text-white p-6">
+        <div className="text-white p-6 max-h-[90vh] overflow-y-auto">
           <h1 className="text-2xl font-semibold mb-4">Add State</h1>
           <div className="space-y-4">
             <div>
@@ -521,16 +559,54 @@ export default function LocationsPage() {
                 type="text"
                 value={stateForm.name}
                 onChange={(e) =>
-                  setStateForm({ ...stateForm, name: e.target.value })
+                  setStateForm((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">Photo (required)</Label>
+              <div className="flex flex-wrap items-start gap-4">
+                {stateForm.imageFile && (
+                  <div className="shrink-0">
+                    <p className="text-xs text-gray-400 mb-1">Selected</p>
+                    <img
+                      src={URL.createObjectURL(stateForm.imageFile)}
+                      alt="Preview"
+                      className="h-24 w-24 rounded-lg object-cover border border-gray-600"
+                    />
+                  </div>
+                )}
+                <div
+                  {...addStateImageDropzone.getRootProps()}
+                  className="border border-dashed border-gray-500 rounded-xl p-4 cursor-pointer hover:border-brand-500 transition-colors min-w-[200px]"
+                >
+                  <input {...addStateImageDropzone.getInputProps()} />
+                  <p className="text-sm text-gray-400 text-center">
+                    {addStateImageDropzone.isDragActive
+                      ? "Drop image here"
+                      : "Drag & drop a photo, or click to select"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <RichTextEditor
+                label="Page description (required)"
+                value={stateForm.description}
+                onChange={(html) =>
+                  setStateForm((prev) => ({ ...prev, description: html }))
+                }
+                placeholder="Add a description with bold, links, lists…"
+                minHeight="160px"
+                disabled={!!savingState}
               />
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 onClick={() => {
                   setOpenStateModal(false);
-                  setStateForm({ name: "" });
+                  setStateForm({ name: "", description: "", imageFile: null });
                 }}
                 className="bg-gray-600 hover:bg-gray-700"
                 disabled={savingState}
@@ -633,17 +709,17 @@ export default function LocationsPage() {
         </div>
       </Modal>
 
-      {/* Add Local Area Modal */}
+      {/* Add City Modal – same layout as Edit State: name, photo, rich text description */}
       <Modal
         isOpen={openLocalAreaModal}
         onClose={() => {
           setOpenLocalAreaModal(false);
-          setLocalAreaForm({ name: "", description: "" });
+          setLocalAreaForm({ name: "", description: "", imageFile: null });
           setSelectedStateId(null);
         }}
         showCloseButton={true}
       >
-        <div className="text-white p-6">
+        <div className="text-white p-6 max-h-[90vh] overflow-y-auto">
           <h1 className="text-2xl font-semibold mb-4">Add City</h1>
           <div className="space-y-4">
             <div>
@@ -653,28 +729,55 @@ export default function LocationsPage() {
                 type="text"
                 value={localAreaForm.name}
                 onChange={(e) =>
-                  setLocalAreaForm({ ...localAreaForm, name: e.target.value })
+                  setLocalAreaForm((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className="w-full"
               />
             </div>
             <div>
-              <Label className="mb-2">City description <span className="text-red-400">*</span></Label>
-              <TextArea
-                placeholder="Enter city description (required)"
+              <Label className="mb-2">Photo</Label>
+              <div className="flex flex-wrap items-start gap-4">
+                {localAreaForm.imageFile && (
+                  <div className="shrink-0">
+                    <p className="text-xs text-gray-400 mb-1">New</p>
+                    <img
+                      src={URL.createObjectURL(localAreaForm.imageFile)}
+                      alt="Preview"
+                      className="h-24 w-24 rounded-lg object-cover border border-gray-600"
+                    />
+                  </div>
+                )}
+                <div
+                  {...addCityImageDropzone.getRootProps()}
+                  className="border border-dashed border-gray-500 rounded-xl p-4 cursor-pointer hover:border-brand-500 transition-colors min-w-[200px]"
+                >
+                  <input {...addCityImageDropzone.getInputProps()} />
+                  <p className="text-sm text-gray-400 text-center">
+                    {addCityImageDropzone.isDragActive
+                      ? "Drop image here"
+                      : "Drag & drop a photo, or click to select"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <RichTextEditor
+                label="Page description"
+                placeholder="Add a description with bold, links, lists…"
                 value={localAreaForm.description}
-                onChange={(val) =>
-                  setLocalAreaForm({ ...localAreaForm, description: val })
+                onChange={(html) =>
+                  setLocalAreaForm((prev) => ({ ...prev, description: html }))
                 }
-                rows={3}
-                className="w-full"
+                minHeight="160px"
+                disabled={!!savingCity}
               />
+              <p className="mt-1 text-xs text-gray-400">City description is required.</p>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 onClick={() => {
                   setOpenLocalAreaModal(false);
-                  setLocalAreaForm({ name: "", description: "" });
+                  setLocalAreaForm({ name: "", description: "", imageFile: null });
                   setSelectedStateId(null);
                 }}
                 className="bg-gray-600 hover:bg-gray-700"

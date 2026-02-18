@@ -191,6 +191,7 @@ export interface UserProfileData {
   name: string | null;
   email: string;
   password?: string;
+  wallet_balance?: string;
   is_verified: string | number;
   is_email_verified: string;
   adhar: string | null;
@@ -238,6 +239,26 @@ export async function approveUserApi(
   formData.append("status", status);
   formData.append("reason", reason || "NA");
   const { data } = await api.post<ApproveUserResponse>("/Wb/approve_user", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+/** Add/update wallet balance: POST /Wb/add_wallet_balance with form-data user_id, wallet_balance */
+export interface AddWalletBalanceResponse {
+  status: number;
+  message: string;
+  data?: unknown;
+}
+
+export async function addWalletBalanceApi(
+  userId: string,
+  walletBalance: string | number
+): Promise<AddWalletBalanceResponse> {
+  const formData = new FormData();
+  formData.append("user_id", userId);
+  formData.append("wallet_balance", String(walletBalance));
+  const { data } = await api.post<AddWalletBalanceResponse>("/Wb/add_wallet_balance", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
@@ -568,16 +589,22 @@ export async function getStateCitiesApi(): Promise<StateWithCitiesItem[]> {
   }));
 }
 
-/** Add state: POST /Wb/add_state with form-data name */
+/** Add state: POST /Wb/add_state with form-data name, description, image? */
 export interface AddStateResponse {
   status: number;
   message: string;
   data?: ApiState;
 }
 
-export async function addStateApi(name: string): Promise<AddStateResponse> {
+export async function addStateApi(
+  name: string,
+  description: string,
+  image?: File
+): Promise<AddStateResponse> {
   const formData = new FormData();
   formData.append("name", name.trim());
+  formData.append("description", description.trim());
+  if (image) formData.append("image", image);
   const { data } = await api.post<AddStateResponse>("/Wb/add_state", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -606,7 +633,7 @@ export async function updateStateApi(
   return data;
 }
 
-/** Add city: POST /Wb/add_city with form-data state_id, name, description */
+/** Add city: POST /Wb/add_city with form-data state_id, name, description, image? */
 export interface AddCityResponse {
   status: number;
   message: string;
@@ -616,12 +643,14 @@ export interface AddCityResponse {
 export async function addCityApi(
   stateId: string,
   name: string,
-  description: string
+  description: string,
+  image?: File
 ): Promise<AddCityResponse> {
   const formData = new FormData();
   formData.append("state_id", stateId);
   formData.append("name", name.trim());
   formData.append("description", description.trim());
+  if (image) formData.append("image", image);
   const { data } = await api.post<AddCityResponse>("/Wb/add_city", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
@@ -681,6 +710,126 @@ export async function deleteCityApi(cityId: string): Promise<DeleteCityResponse>
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
+}
+
+/** Get pricing: GET /Wb/get_pricing */
+export interface ApiPricingItem {
+  id: string;
+  title: string;
+  coins: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetPricingResponse {
+  status: number;
+  message: string;
+  data: ApiPricingItem[];
+}
+
+export async function getPricingApi(): Promise<ApiPricingItem[]> {
+  const { data } = await api.post<GetPricingResponse>("/Wb/get_pricing");
+  if (!Array.isArray(data?.data)) {
+    throw new Error(data?.message ?? "Failed to fetch pricing.");
+  }
+  return data.data;
+}
+
+/** Update pricing row: POST /Wb/update_pricing_table – form-data: pricing_id, title, coins */
+export interface UpdatePricingResponse {
+  status: number;
+  message: string;
+  data?: unknown;
+}
+
+export async function updatePricingApi(
+  pricingId: string,
+  title: string,
+  coins: string
+): Promise<UpdatePricingResponse> {
+  const formData = new FormData();
+  formData.append("pricing_id", pricingId);
+  formData.append("title", title.trim());
+  formData.append("coins", String(coins).trim());
+  const { data } = await api.post<UpdatePricingResponse>(
+    "/Wb/update_pricing_table",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return data;
+}
+
+/** Admin notifications list: GET /Wb/admin_notifications?page=1 */
+export interface ApiNotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  created_at: string;
+  total_users: string;
+}
+
+export interface GetAdminNotificationsResponse {
+  status: number;
+  page: number;
+  per_page: number;
+  total_records: number;
+  total_pages: number;
+  data: ApiNotificationItem[];
+}
+
+export async function getAdminNotificationsApi(
+  page: number = 1
+): Promise<GetAdminNotificationsResponse> {
+  const { data } = await api.get<GetAdminNotificationsResponse>(
+    "/Wb/admin_notifications",
+    { params: { page } }
+  );
+  return data;
+}
+
+/** Send notification: POST /Wb/send_notification – form-data: title, message, type (all | selected), user_ids[] when type=selected */
+export interface SendNotificationResponse {
+  status: number;
+  message?: string;
+}
+
+export async function sendNotificationApi(
+  title: string,
+  message: string,
+  type: "all" | "selected",
+  userIds: string[] = []
+): Promise<SendNotificationResponse> {
+  const formData = new FormData();
+  formData.append("title", title.trim());
+  formData.append("message", message.trim());
+  formData.append("type", type);
+  if (type === "selected" && userIds.length > 0) {
+    userIds.forEach((id) => formData.append("user_ids[]", String(id).trim()));
+  }
+  const { data } = await api.post<SendNotificationResponse>(
+    "/Wb/send_notification",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return data;
+}
+
+/** Dashboard counts: GET /Wb/dashboard_counts */
+export interface DashboardCountsResponse {
+  status: number;
+  data: {
+    total_users: number;
+    total_ads: number;
+  };
+}
+
+export async function getDashboardCountsApi(): Promise<DashboardCountsResponse["data"]> {
+  const { data } = await api.get<DashboardCountsResponse>("/Wb/dashboard_counts");
+  if (!data?.data) {
+    throw new Error("Failed to fetch dashboard counts.");
+  }
+  return data.data;
 }
 
 export default api;

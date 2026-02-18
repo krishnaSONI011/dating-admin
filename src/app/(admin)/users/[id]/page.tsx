@@ -3,9 +3,11 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
+import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
 import {
+  addWalletBalanceApi,
   approveUserApi,
   getUserProfileApi,
   type UserProfileData,
@@ -29,6 +31,9 @@ export default function UserProfilePage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState("");
+  const [updatingWallet, setUpdatingWallet] = useState(false);
 
   const refetchProfile = useCallback(() => {
     if (!id) return;
@@ -98,6 +103,36 @@ export default function UserProfilePage() {
         toast.error(err instanceof Error ? err.message : "Failed to reject.");
       })
       .finally(() => setActionLoading(false));
+  }
+
+  function openWalletModal() {
+    setWalletBalance(profile?.wallet_balance ?? "0.00");
+    setWalletModalOpen(true);
+  }
+
+  function closeWalletModal() {
+    setWalletModalOpen(false);
+    setWalletBalance("");
+  }
+
+  function handleUpdateWallet() {
+    if (!id) return;
+    const balance = walletBalance.trim();
+    if (!balance || isNaN(Number(balance))) {
+      toast.error("Please enter a valid balance amount.");
+      return;
+    }
+    setUpdatingWallet(true);
+    addWalletBalanceApi(id, balance)
+      .then(() => {
+        toast.success("Wallet balance updated successfully.");
+        closeWalletModal();
+        refetchProfile();
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : "Failed to update wallet balance.");
+      })
+      .finally(() => setUpdatingWallet(false));
   }
 
   if (loading) {
@@ -171,6 +206,25 @@ export default function UserProfilePage() {
             </div>
           </div>
 
+          {/* Wallet Balance Section */}
+          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Wallet Balance</p>
+                <p className="text-xl font-semibold text-gray-800 dark:text-white/90">
+                  ₹{profile.wallet_balance ?? "0.00"}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={openWalletModal}
+                className="bg-brand-500 hover:bg-brand-600 dark:bg-brand-600"
+              >
+                Update Balance
+              </Button>
+            </div>
+          </div>
+
           <Modal isOpen={rejectModalOpen} onClose={closeRejectModal}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -205,6 +259,48 @@ export default function UserProfilePage() {
                   disabled={actionLoading}
                 >
                   Reject profile
+                </Button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* Update Wallet Balance Modal */}
+          <Modal isOpen={walletModalOpen} onClose={closeWalletModal}>
+            <div className="p-6">
+              <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+                Update Wallet Balance
+              </h3>
+              <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                Current balance: ₹{profile.wallet_balance ?? "0.00"}
+              </p>
+              <div className="mb-6">
+                <Label>New Wallet Balance</Label>
+                <Input
+                  type="number"
+                  placeholder="Enter balance amount (e.g., 500)"
+                  value={walletBalance}
+                  onChange={(e) => setWalletBalance(e.target.value)}
+                  className="mt-1.5"
+                  step={0.01}
+                  min="0"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={closeWalletModal}
+                  disabled={updatingWallet}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-brand-500 hover:bg-brand-600 dark:bg-brand-600"
+                  onClick={handleUpdateWallet}
+                  disabled={updatingWallet}
+                >
+                  {updatingWallet ? "Updating…" : "Update Balance"}
                 </Button>
               </div>
             </div>

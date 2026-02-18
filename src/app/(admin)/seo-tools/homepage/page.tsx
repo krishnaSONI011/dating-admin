@@ -99,7 +99,7 @@ export default function HomePage() {
             ) : (
               <>
                 {/* API metadata list */}
-                {metadataList.length > 0 ? (
+                {/* {metadataList.length > 0 ? (
                   <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
                     <Table>
                       <TableHeader className="border-b border-gray-100 dark:border-white/5">
@@ -146,7 +146,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <p className="mb-6 text-gray-500 dark:text-gray-400">No metadata from API yet.</p>
-                )}
+                )} */}
 
                 <div className="grid grid-cols-1 gap-3">
                   <div className="col-span-1 relative mt-2">
@@ -183,7 +183,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mt-10 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      {/* <div className="mt-10 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         <h1 className="text-white text-2xl p-2">Home Page Tabs</h1>
         <div className="grid grid-cols-6">
           {searches.map((name, index) => (
@@ -204,7 +204,7 @@ export default function HomePage() {
           <Button className="mt-4 w-full">Add</Button>
         </div>
       </Modal>
-      </div>
+      </div> */}
     </>
   );
 }

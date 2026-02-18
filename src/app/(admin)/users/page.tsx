@@ -36,6 +36,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [userIdFilter, setUserIdFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -60,14 +61,17 @@ export default function UsersPage() {
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
+    const idQuery = userIdFilter.trim();
     return users.filter((u) => {
       const matchStatus =
         statusFilter === "all" || u.status === statusFilter;
+      const matchId =
+        !idQuery || String(u.id) === idQuery || String(u.id).includes(idQuery);
       const matchName =
         !query || (u.name && u.name.toLowerCase().includes(query)) || u.email.toLowerCase().includes(query);
-      return matchStatus && matchName;
+      return matchStatus && matchId && matchName;
     });
-  }, [users, statusFilter, searchQuery]);
+  }, [users, statusFilter, userIdFilter, searchQuery]);
 
   return (
     <div>
@@ -80,7 +84,16 @@ export default function UsersPage() {
             </p>
           ) : (
             <>
-              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <Label>User ID</Label>
+                  <Input
+                    type="text"
+                    placeholder="Filter by user ID"
+                    value={userIdFilter}
+                    onChange={(e) => setUserIdFilter(e.target.value)}
+                  />
+                </div>
                 <div>
                   <Label>Status</Label>
                   <Select

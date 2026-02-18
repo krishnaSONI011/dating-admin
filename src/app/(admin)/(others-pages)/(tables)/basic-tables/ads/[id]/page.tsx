@@ -181,7 +181,7 @@ export default function AdDetailPage() {
           </div>
 
           {/* Plan buttons: Free, Silver, Gold – current disabled, others colored */}
-          <div className="mb-6">
+          {/* <div className="mb-6">
             <Label className="mb-2 block">Plan</Label>
             <div className="flex flex-wrap gap-2">
               {MEMBERSHIPS.map((plan) => {
@@ -220,7 +220,7 @@ export default function AdDetailPage() {
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           <Modal isOpen={rejectModalOpen} onClose={closeRejectModal}>
             <div className="p-6">
