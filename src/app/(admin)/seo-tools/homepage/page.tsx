@@ -2,50 +2,58 @@
 
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import { Modal } from "@/components/ui/modal";
-import { addMetadataApi, getMetadataApi, type MetadataItem } from "@/lib/api";
+import api, { addMetadataApi, getMetadataApi, type MetadataItem } from "@/lib/api";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import TextEditor from "@/components/TextEditor";
 
 export default function HomePage() {
-  const [metadataList, setMetadataList] = useState<MetadataItem[]>([]);
+
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [selectedMetaId, setSelectedMetaId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState(false);
 
-  const searches = [
-    "call girl in Indore",
-    "call girl in Jaipur",
-    "call girl in Delhi",
-    "call girl in Mumbai",
-    "call girl in Bangalore",
-    "call girl in Pune",
-    "call girl in Ahmedabad",
-    "call girl in Bhopal",
-    "call girl in Noida",
-    "call girl in Gurugram",
-    "call girl in Chandigarh",
-    "call girl in Kolkata",
-    "call girl in Chennai",
-    "call girl in Hyderabad",
-    "call girl in Surat",
-    "call girl in Vadodara",
-    "call girl in Udaipur",
-    "call girl in Jodhpur",
-  ];
+  const [searchAreaTitle , setSearchAreaTitle] = useState('')
+  const [searchAreaSub , setSearchAreaSub] = useState('')
+  const [locationCard , setLocationCard] = useState('')
+  const [searchTitle , setSearchTitle] = useState('')
+  const [description , setDescription] = useState('')
+  const [banner , setBanner] = useState('')
+  const [bannerFile,setBannerFile] = useState<File | null>(null)
+  const [contentSaving,setContentSaving] = useState(false)
 
+  // ================= GET CONTENT =================
+  useEffect(()=>{
+    async function getPageInformation(){
+      try{
+        const formData = new FormData()
+        formData.append('content_id',"1")
+
+        const res = await api.post(`/Wb/content_detail`, formData)
+
+        if(res.data?.status === 0){
+          const d = res.data.data
+          setSearchAreaTitle(d.home_title1 || '')
+          setSearchAreaSub(d.home_title2 || '')
+          setLocationCard(d.explore_title || '')
+          setSearchTitle(d.search_title || '')
+          setDescription(d.description || '')
+          setBanner(d.home_banner || '')
+        }
+      }catch(e){
+        console.log(e)
+      }
+    }
+    getPageInformation()
+  },[])
+
+  // ================= META =================
   useEffect(() => {
-    let cancelled = false;
     getMetadataApi()
-      .then((data) => {
-        if (cancelled) return;
-        setMetadataList(Array.isArray(data) ? data : []);
+      .then((data:any) => {
         const first = Array.isArray(data) ? data[0] : undefined;
         if (first) {
           setMetaTitle(first.title ?? "");
@@ -53,158 +61,156 @@ export default function HomePage() {
           setSelectedMetaId(first.id ?? null);
         }
       })
-      .catch((err) => {
-        if (!cancelled) {
-          toast.error(err instanceof Error ? err.message : "Failed to load meta details.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, []);
 
-  function selectMetaForEdit(item: MetadataItem) {
-    setSelectedMetaId(item.id);
-    setMetaTitle(item.title ?? "");
-    setMetaDescription(item.description ?? "");
-  }
-
+  // ================= SAVE META =================
   function handleSaveMeta() {
     setSaving(true);
     addMetadataApi(metaTitle, metaDescription, selectedMetaId ?? undefined)
-      .then(() => {
-        toast.success("Meta details saved successfully.");
-        return getMetadataApi();
-      })
-      .then((data) => {
-        setMetadataList(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to save meta details.");
-      })
+      .then(() => toast.success("Meta updated"))
+      .catch(()=>toast.error("Save failed"))
       .finally(() => setSaving(false));
   }
 
-  return (
-    <>
-      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="p-3">
-          <h1 className="text-white text-2xl p-2">Meta Details Of The Site</h1>
-          <div>
-            {loading ? (
-              <p className="py-4 text-gray-500 dark:text-gray-400">Loading meta details…</p>
-            ) : (
-              <>
-                {/* API metadata list */}
-                {/* {metadataList.length > 0 ? (
-                  <div className="mb-6 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
-                    <Table>
-                      <TableHeader className="border-b border-gray-100 dark:border-white/5">
-                        <TableRow>
-                          <TableCell isHeader className="px-5 py-3 text-theme-xs text-gray-500">
-                            Title
-                          </TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-theme-xs text-gray-500">
-                            Description
-                          </TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-theme-xs text-gray-500">
-                            Updated
-                          </TableCell>
-                          <TableCell isHeader className="px-5 py-3 text-theme-xs text-gray-500">
-                            Action
-                          </TableCell>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody className="divide-y divide-gray-100 dark:divide-white/5">
-                        {metadataList.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="px-5 py-4 text-black dark:text-white">
-                              {item.title}
-                            </TableCell>
-                            <TableCell className="px-5 py-4 text-gray-600 dark:text-gray-400 max-w-md truncate">
-                              {item.description}
-                            </TableCell>
-                            <TableCell className="px-5 py-4 text-gray-500 dark:text-gray-400 text-sm">
-                              {item.updated}
-                            </TableCell>
-                            <TableCell className="px-5 py-4">
-                              <Button
-                                size="sm"
-                                onClick={() => selectMetaForEdit(item)}
-                                className={selectedMetaId === item.id ? "ring-2 ring-brand-500" : ""}
-                              >
-                                {selectedMetaId === item.id ? "Editing" : "Edit"}
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <p className="mb-6 text-gray-500 dark:text-gray-400">No metadata from API yet.</p>
-                )} */}
+  // ================= SAVE CONTENT =================
+  async function handleSaveContent(){
+    try{
+      setContentSaving(true)
 
-                <div className="grid grid-cols-1 gap-3">
-                  <div className="col-span-1 relative mt-2">
-                    <Input
-                      placeholder="Affair Escorts"
-                      type="text"
-                      className="pl-[120px]"
-                      value={metaTitle}
-                      onChange={(e) => setMetaTitle(e.target.value)}
-                    />
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 border-r border-gray-200 px-3.5 py-3 text-gray-500 dark:border-gray-800 dark:text-gray-400">
-                      Site Title
-                    </span>
-                  </div>
-                  <div className="col-span-1 relative mt-2">
-                    <Input
-                      placeholder="Affair Escorts"
-                      type="text"
-                      className="pl-[150px]"
-                      value={metaDescription}
-                      onChange={(e) => setMetaDescription(e.target.value)}
-                    />
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 border-r border-gray-200 px-3.5 py-3 text-gray-500 dark:border-gray-800 dark:text-gray-400">
-                      Site Description
-                    </span>
-                  </div>
-                  <Button className="mt-5" onClick={handleSaveMeta} disabled={saving}>
-                    {saving ? "Saving…" : "Save Change"}
-                  </Button>
-                </div>
-                </>
-              )}
-          </div>
-        </div>
+      const formData = new FormData()
+      formData.append("content_id","1")
+      formData.append("home_title1", searchAreaTitle)
+      formData.append("home_title2", searchAreaSub)
+      formData.append("explore_title", locationCard)
+      formData.append("search_title", searchTitle)
+      formData.append("description", description)
+
+      if(bannerFile){
+        formData.append("home_banner", bannerFile)
+      }
+      console.log(bannerFile)
+
+      const res = await api.post(
+        `/Wb/update_content`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Accept": "application/json",
+          }
+        }
+      )
+
+      if(res.data?.status === 0){
+        toast.success("Content updated ")
+      }else{
+        toast.error(res.data?.message || "Update failed")
+      }
+
+    }catch(e){
+      toast.error("Something went wrong")
+    }finally{
+      setContentSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* ================= META ================= */}
+      <div className="rounded-2xl border border-gray-800 bg-[#020617] p-6 shadow-xl">
+        <h2 className="text-white text-xl font-semibold mb-4">Meta Details</h2>
+
+        {loading ? (
+          <p className="text-gray-400">Loading...</p>
+        ) : (
+          <>
+            <Input
+              placeholder="Site Title"
+              value={metaTitle}
+              onChange={(e) => setMetaTitle(e.target.value)}
+              className="bg-gray-900 border-gray-700 text-white"
+            />
+
+            <Input
+              placeholder="Site Description"
+              className="mt-3 bg-gray-900 border-gray-700 text-white"
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+            />
+
+            <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={handleSaveMeta} disabled={saving}>
+              {saving ? "Saving..." : "Save Meta"}
+            </Button>
+          </>
+        )}
       </div>
 
-      {/* <div className="mt-10 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <h1 className="text-white text-2xl p-2">Home Page Tabs</h1>
-        <div className="grid grid-cols-6">
-          {searches.map((name, index) => (
-            <span key={index} className="m-2">
-              <Badge size="lg">{name}</Badge>
-            </span>
-          ))}
-          <Button onClick={() => setOpen(true)} className="col-span-6 mt-5">Add More</Button>
+      {/* ================= CONTENT ================= */}
+      <div className="rounded-2xl border border-gray-800 bg-[#020617] p-6 shadow-xl space-y-4">
+
+        <h2 className="text-white text-xl font-semibold">Homepage Content</h2>
+
+        <Input
+          placeholder="Search Area Title"
+          value={searchAreaTitle}
+          onChange={(e)=>setSearchAreaTitle(e.target.value)}
+          className="bg-gray-900 border-gray-700 text-white"
+        />
+
+        <Input
+          placeholder="Search Area Sub Title"
+          value={searchAreaSub}
+          onChange={(e)=>setSearchAreaSub(e.target.value)}
+          className="bg-gray-900 border-gray-700 text-white"
+        />
+
+        <Input
+          placeholder="Location Card Title"
+          value={locationCard}
+          onChange={(e)=>setLocationCard(e.target.value)}
+          className="bg-gray-900 border-gray-700 text-white"
+        />
+
+        <Input
+          placeholder="Page Section Title"
+          value={searchTitle}
+          onChange={(e)=>setSearchTitle(e.target.value)}
+          className="bg-gray-900 border-gray-700 text-white"
+        />
+
+        <div>
+          <Label className="text-gray-300">Description</Label>
+          <TextEditor 
+            description={description}
+            onChange={(val)=>setDescription(val)}
+          />
         </div>
 
-        <Modal isOpen={open} onClose={() => setOpen(false)} showCloseButton={true}>
-                            <div className="text-white p-3">
-                                <h1 className="text-xl m-3">Add Tag name</h1>
-                                <Label className="mt-5">Tag Name</Label>
-                                    <Input placeholder="call girl in indore" className="" type="text" />
-                                    <Label className="mt-5">Link to Tag</Label>
-                                    <Input placeholder="https://affairescorts.com/call-girl-indore" className="" type="text" />
-          <Button className="mt-4 w-full">Add</Button>
+        <div>
+          <Label className="text-gray-300">Banner Image</Label>
+
+          {banner && (
+            <img src={banner} className="h-40 mb-3 rounded-lg border border-gray-700"/>
+          )}
+
+<input
+  type="file"
+  onChange={(e)=>setBannerFile(e.target.files?.[0] || null)}
+  className="bg-gray-900 border border-gray-700 text-white p-2 rounded w-full"
+/>
         </div>
-      </Modal>
-      </div> */}
-    </>
+
+        <Button 
+          onClick={handleSaveContent}
+          disabled={contentSaving}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {contentSaving ? "Saving..." : "Save Content"}
+        </Button>
+
+      </div>
+    </div>
   );
 }
