@@ -15,7 +15,7 @@ export default function Pages(){
         try{
             const res = await api.post(`/Wb/pages`)
             if(res.data.status === 0){
-                setPagesData(res.data.data)
+                setPagesData(res.data.data.pages || [])
             }
         }catch(e){
             console.log(e)
@@ -28,14 +28,16 @@ export default function Pages(){
     },[])
 
     // ================= DELETE PAGE =================
-    async function handleDelete(id:number){
+    async function handleDelete(id:string){
         if(!confirm("Are you sure you want to delete this page?")) return
 
         try{
             setLoading(true)
 
             // 🔥 Replace this API
-            const res = await api.post(`/Wb/delete_page`,{ id })
+            const formData = new FormData()
+            formData.append('page_id' , id)
+            const res = await api.post(`/Wb/delete_pages`, formData)
 
             if(res.data.status === 0){
                 toast.success("Page deleted")
@@ -105,7 +107,7 @@ export default function Pages(){
                                     <td className="p-3 border border-gray-700 text-center space-x-2">
 
                                         <button
-                                            onClick={()=>router.push(`/admin/pages/edit/${item.id}`)}
+                                            onClick={()=>router.push(`/pages/page-info/edit/${item.slug}`)}
                                             className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm"
                                         >
                                             Edit

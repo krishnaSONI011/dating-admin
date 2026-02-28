@@ -67,7 +67,9 @@ const navItems: NavItem[] = [
     icon: <PageIcon />,
     subItems: [{ name: "Homepage Setting", path: "/seo-tools/homepage", pro: false },
       // {name : "Pages setting" , path:"/seo-tools/page", pro:false},
-      {name : "Locations" , path:"/seo-tools/locations", pro:false}
+      {name : "City" , path:"/seo-tools/locations", pro:false},
+      {name : "State" , path:"/seo-tools/state", pro:false},
+      {name : "Local Area" , path:"/seo-tools/local-area", pro:false},
     ],
     
   },
@@ -85,6 +87,15 @@ const navItems: NavItem[] = [
     icon : <PageIcon />,
     subItems: [{ name: "Coin Plan", path: "/payments/coin-plane", pro: false },
       {name : "Pricing Setting" , path:"/payments/set-price", pro:false},
+     
+    ],
+
+  },
+  {
+    name: "Setting" ,
+    icon : <ListIcon />,
+    subItems: [{ name: "site setting", path: "/setting/site", pro: false },
+      {name : "footer setting" , path:"/setting/footer", pro:false},
      
     ],
 

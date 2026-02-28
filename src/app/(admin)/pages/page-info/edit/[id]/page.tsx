@@ -2,13 +2,15 @@
 
 import api from "@/lib/api"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { toast } from "react-toastify"
 import TextEditor from "@/components/TextEditor"
 
-export default function AddPages() {
+export default function EditPages() {
 
     const router = useRouter()
+    const params = useParams()
+    const id = params?.id ?? ""
 
     const [title, setTitle] = useState("")
     const [description, setDescription] = useState("")
@@ -18,7 +20,7 @@ export default function AddPages() {
     const [selectedCity, setSelectedCity] = useState("")
     const [loading, setLoading] = useState(false)
 
-    // ================= LOAD CATEGORY =================
+    // ================= LOAD CATEGORIES =================
     async function getCategories() {
         try {
             const res = await api.post('/Wb/posts_categories')
@@ -33,7 +35,7 @@ export default function AddPages() {
     // ================= LOAD CITIES =================
     async function getCities() {
         try {
-            const res = await api.post('/Wb/cities_areas') // 🔥 replace if different
+            const res = await api.post('/Wb/cities_areas')
             if (res.data.status == 0) {
                 setCities(res.data.data)
             }
@@ -42,13 +44,38 @@ export default function AddPages() {
         }
     }
 
-    useEffect(() => {
-        getCategories()
-        getCities()
-    }, [])
+    // ================= LOAD PAGE DATA =================
+    async function getPageData() {
+        try {
+            const formData = new FormData()
+            formData.append("page_slug", id as string)
 
-    // ================= SAVE PAGE =================
-    async function handleSave() {
+            const res = await api.post('/Wb/pages_detail', formData)
+
+            if (res.data.status == 0) {
+                const page = res.data.data
+
+                setTitle(page.title)
+                setDescription(page.description)
+                setSelectedCategory(page.cat_slug)
+                setSelectedCity(page.city_slug)
+            }
+
+        } catch (error) {
+            toast.error("Failed to load page data")
+        }
+    }
+
+    useEffect(() => {
+        if (id) {
+            getCategories()
+            getCities()
+            getPageData()
+        }
+    }, [id])
+
+    // ================= UPDATE PAGE =================
+    async function handleUpdate() {
 
         if (!title || !description || !selectedCategory || !selectedCity) {
             toast.error("All fields required")
@@ -59,23 +86,24 @@ export default function AddPages() {
             setLoading(true)
 
             const formData = new FormData()
+            formData.append("id", id as string)
             formData.append("title", title)
             formData.append("description", description)
             formData.append("cat_slug", selectedCategory)
             formData.append("city_slug", selectedCity)
-            formData.append("area_slug", "") // empty as per API
+            formData.append("area_slug", "")
 
-            const res = await api.post('/Wb/add_pages', formData)
+            const res = await api.post('/Wb/update_pages', formData)
 
             if (res.data.status == 0) {
-                toast.success("Page added successfully")
+                toast.success("Page updated successfully")
                 router.push("/pages/page-info")
             } else {
                 toast.error(res.data.message)
             }
 
         } catch (e) {
-            toast.error("Save failed")
+            toast.error("Update failed")
         } finally {
             setLoading(false)
         }
@@ -84,9 +112,9 @@ export default function AddPages() {
     return (
         <div className="rounded-2xl border border-gray-800 p-6 shadow-xl space-y-6 text-white bg-[#020617]">
 
-            {/* ================= HEADER ================= */}
+            {/* HEADER */}
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-semibold">Add Page</h1>
+                <h1 className="text-2xl font-semibold">Edit Page</h1>
 
                 <button
                     onClick={() => router.back()}
@@ -96,7 +124,7 @@ export default function AddPages() {
                 </button>
             </div>
 
-            {/* ================= TITLE ================= */}
+            {/* TITLE */}
             <div>
                 <label className="block mb-2 text-gray-300">Title</label>
                 <input
@@ -104,11 +132,10 @@ export default function AddPages() {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
-                    placeholder="Enter page title"
                 />
             </div>
 
-            {/* ================= CATEGORY ================= */}
+            {/* CATEGORY */}
             <div>
                 <label className="block mb-2 text-gray-300">Category</label>
                 <select
@@ -125,7 +152,7 @@ export default function AddPages() {
                 </select>
             </div>
 
-            {/* ================= LOCATION ================= */}
+            {/* CITY */}
             <div>
                 <label className="block mb-2 text-gray-300">Location (City)</label>
                 <select
@@ -142,30 +169,22 @@ export default function AddPages() {
                 </select>
             </div>
 
-            {/* ================= DESCRIPTION ================= */}
+            {/* DESCRIPTION */}
             <div>
                 <label className="block mb-2 text-gray-300">Description</label>
-                {/* <textarea
-                    rows={6}
-                    value={description}
-                    onChange={(e)=>setDescription(e.target.value)}
-                    className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
-                    placeholder="Enter page description"
-                /> */}
-                {/* <TextArea value={description} onChange={(e)=>setDescription(e.target.value)}/> */}
                 <TextEditor
                     description={description}
                     onChange={(value) => setDescription(value)}
                 />
             </div>
 
-            {/* ================= SAVE BUTTON ================= */}
+            {/* UPDATE BUTTON */}
             <button
-                onClick={handleSave}
+                onClick={handleUpdate}
                 disabled={loading}
-                className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg"
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg"
             >
-                {loading ? "Saving..." : "Save Page"}
+                {loading ? "Updating..." : "Update Page"}
             </button>
 
         </div>
