@@ -113,7 +113,7 @@ export default function AdsTable({ ads }: AdsTableProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="px-5 py-4">
-                      <Link href={`/basic-tables/ads/${ad.id}`}>
+                      <Link href={`/basic-tables/ads/${ad.slug}`}>
                         <Button size="sm">View Ad</Button>
                       </Link>
                     </TableCell>

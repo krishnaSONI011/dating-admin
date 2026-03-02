@@ -370,6 +370,12 @@ export default function UserProfilePage() {
               </p>
             </div>
             <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Mobile</p>
+              <p className="font-medium text-gray-800 dark:text-white/90">
+                {profile?.mobile}
+              </p>
+            </div>
+            <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
               <p className="font-medium text-gray-800 dark:text-white/90">
                 {statusLabel[profile.is_approved] ?? profile.is_approved}

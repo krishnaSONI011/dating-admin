@@ -96,6 +96,8 @@ const navItems: NavItem[] = [
     icon : <ListIcon />,
     subItems: [{ name: "site setting", path: "/setting/site", pro: false },
       {name : "footer setting" , path:"/setting/footer", pro:false},
+      {name : "Contact Setting" , path:"/setting/contact", pro:false},
+      {name : "Service Setting" , path:"/setting/service", pro:false},
      
     ],
 

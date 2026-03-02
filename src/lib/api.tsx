@@ -188,6 +188,7 @@ export interface UserProfileData {
   role: string;
   name: string | null;
   email: string;
+  mobile : string ;
   password?: string;
   wallet_balance?: string;
   is_verified: string | number;
@@ -289,6 +290,7 @@ export interface ApiAd {
   id: string;
   user_id: string;
   name: string;
+  slug:string ;
   email: string;
   gender: string;
   mobile: string;
@@ -378,7 +380,7 @@ export interface GetAdDetailResponse {
 
 export async function getAdDetailApi(adsId: string): Promise<AdDetailData> {
   const formData = new FormData();
-  formData.append("ads_id", adsId);
+  formData.append("ads_slug", adsId);
   const { data } = await api.post<GetAdDetailResponse>("/Wb/ads_edit", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
