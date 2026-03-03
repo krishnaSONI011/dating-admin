@@ -88,6 +88,7 @@ const navItems: NavItem[] = [
     icon : <PageIcon />,
     subItems: [{ name: "Coin Plan", path: "/payments/coin-plane", pro: false },
       {name : "Pricing Setting" , path:"/payments/set-price", pro:false},
+      {name : "Payments Details" , path:"/payments/details", pro:false},
      
     ],
 
