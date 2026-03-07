@@ -79,6 +79,7 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Category", path: "/pages/category", pro: false },
       // {name : "Pages setting" , path:"/seo-tools/page", pro:false},
       {name : "Pages Info" , path:"/pages/page-info", pro:false},
+      {name : "Blogs" , path:"/pages/blogs", pro:false},
       {name : "Footer Pages" , path:"/pages/footer-page", pro:false},
     ],
     
