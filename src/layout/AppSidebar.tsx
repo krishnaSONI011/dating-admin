@@ -101,6 +101,7 @@ const navItems: NavItem[] = [
       {name : "footer setting" , path:"/setting/footer", pro:false},
       {name : "Contact Setting" , path:"/setting/contact", pro:false},
       {name : "Service Setting" , path:"/service", pro:false},
+      {name : "Password Setting" , path:"/setting/change", pro:false},
      
     ],
 
