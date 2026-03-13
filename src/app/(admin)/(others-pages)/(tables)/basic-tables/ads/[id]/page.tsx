@@ -5,7 +5,7 @@ import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
-import {
+import api, {
   approveAdsApi,
   assignAdsMembershipApi,
   getAdDetailApi,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/api";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 
 const statusLabel: Record<string, string> = {
@@ -33,6 +33,9 @@ export default function AdDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [deleteAdsModal , setDeleteAdsModal] = useState<true | false > (false)
+  const router = useRouter()
+  const [deleteLoading , setDeleteLoading] = useState<true | false > (false)
 
   const refetch = useCallback(() => {
     if (!id) return;
@@ -99,20 +102,43 @@ export default function AdDetailPage() {
       })
       .finally(() => setActionLoading(false));
   }
-
-  function handleAssignMembership(membership: Membership) {
-    if (!id) return;
-    setActionLoading(true);
-    assignAdsMembershipApi(id, membership)
-      .then(() => {
-        toast.success(`Plan set to ${membership}.`);
-        refetch();
-      })
-      .catch((err) => {
-        toast.error(err instanceof Error ? err.message : "Failed to update plan.");
-      })
-      .finally(() => setActionLoading(false));
+  async function deleteAds() {
+      try{
+        setDeleteLoading(true)
+        const fd = new FormData()
+        const id = detail?.ads.id ?? ''
+        fd.append("ads_id" ,id)
+        fd.append("delete_reason" , rejectReason)
+        const res = await api.post('/Wb/delete_ads' , fd)
+        if(res.data.status == 0){
+          toast.success(res.data.message)
+          setRejectReason("")
+          router.push('/basic-tables')
+        }
+        else{
+          toast.error(res.data.message)
+        }
+      }catch(e:any){
+        toast.error(e)
+        console.log(e)
+      }finally{
+        setDeleteLoading(false)
+      }
   }
+
+  // function handleAssignMembership(membership: Membership) {
+  //   if (!id) return;
+  //   setActionLoading(true);
+  //   assignAdsMembershipApi(id, membership)
+  //     .then(() => {
+  //       toast.success(`Plan set to ${membership}.`);
+  //       refetch();
+  //     })
+  //     .catch((err) => {
+  //       toast.error(err instanceof Error ? err.message : "Failed to update plan.");
+  //     })
+  //     .finally(() => setActionLoading(false));
+  // }
 
   if (loading) {
     return (
@@ -161,21 +187,21 @@ export default function AdDetailPage() {
                   Back to Ads
                 </Button>
               </Link>
-              <Button
+              {/* <Button
                 size="sm"
                 className="bg-success-500 hover:bg-success-600 dark:bg-success-600"
                 onClick={handleApprove}
                 disabled={actionLoading || isApproved}
               >
                 Approve
-              </Button>
+              </Button> */}
               <Button
                 size="sm"
                 className="bg-error-500 hover:bg-error-600 dark:bg-error-600"
                 onClick={openRejectModal}
                 disabled={actionLoading}
               >
-                Reject
+               Delete
               </Button>
             </div>
           </div>
@@ -225,15 +251,15 @@ export default function AdDetailPage() {
           <Modal isOpen={rejectModalOpen} onClose={closeRejectModal}>
             <div className="p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
-                Reject ad
+                Delete ad
               </h3>
               <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-                Please provide a reason for rejecting this ad.
+                Please provide a reason for Deleting this ad.
               </p>
               <div className="mb-6">
                 <Label>Reason</Label>
                 <TextArea
-                  placeholder="Enter rejection reason…"
+                  placeholder="Enter delete reason…"
                   value={rejectReason}
                   onChange={setRejectReason}
                   rows={4}
@@ -250,12 +276,13 @@ export default function AdDetailPage() {
                   Cancel
                 </Button>
                 <Button
+                  loading={deleteLoading}
                   size="sm"
                   className="bg-error-500 hover:bg-error-600 dark:bg-error-600"
-                  onClick={handleRejectSubmit}
+                  onClick={deleteAds}
                   disabled={actionLoading}
                 >
-                  Reject ad
+                  Delete ad
                 </Button>
               </div>
             </div>
@@ -356,6 +383,40 @@ export default function AdDetailPage() {
           )}
         </div>
       </div>
+      <Modal isOpen={deleteAdsModal} onClose={()=>setDeleteAdsModal(false)}>
+      <div className="p-6">
+    
+    <h2 className="text-lg text-white font-semibold mb-3">
+      Delete Ads
+    </h2>
+
+    <p className="text-sm text-white mb-6">
+     Please Provide A Reason to the user to delete his ads
+    </p>
+    <div>
+      <TextArea />
+    </div>
+
+    <div className="flex justify-end gap-3">
+      
+      <Button
+        onClick={() => setDeleteAdsModal(false)}
+        className=""
+      >
+        Cancel
+      </Button>
+
+      <Button
+      loading={deleteLoading}
+        onClick={deleteAds}
+        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+      >
+        Yes, Delete
+      </Button>
+
+    </div>
+  </div>
+      </Modal>
     </div>
   );
 }

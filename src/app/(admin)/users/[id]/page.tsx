@@ -6,7 +6,7 @@ import TextArea from "@/components/form/input/TextArea";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
-import {
+import api, {
   addWalletBalanceApi,
   approveUserApi,
   getUserProfileApi,
@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const statusLabel: Record<string, string> = {
   "0": "Pending",
@@ -34,7 +35,12 @@ export default function UserProfilePage() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState("");
   const [updatingWallet, setUpdatingWallet] = useState(false);
-
+  const [blockModal , setBlockModal] = useState<boolean>(false)
+  const [blockDescription , setBlockDescription] = useState<string>('')
+  const [blockLoading , setBlockLoading] = useState<false | true>(false)
+  const [deleteModal , setDeletModal] = useState<false | true>(false)
+  const [deleteLoading , setDeleteLoading] = useState<false | true>(false)
+  const router = useRouter()
   const refetchProfile = useCallback(() => {
     if (!id) return;
     getUserProfileApi(id).then(setProfile).catch(() => {});
@@ -84,9 +90,64 @@ export default function UserProfilePage() {
     setRejectModalOpen(true);
   }
 
+  async function  handleDeleteUser() {
+      try{
+        setDeleteLoading(true)
+        const fd = new FormData()
+        fd.append("user_id" , id)
+        
+          const res = await api.post('/Wb/delete_user' , fd)
+          if(res.data.status == 0){
+            toast.success (res.data.message)
+            setDeletModal(false)
+            router.push('/users')
+           
+          }else{
+            toast.error (res.data.message)
+            setDeletModal(false)
+          }
+      }catch(e:any){
+        toast.error(e)
+        console.log(e)
+      }finally{
+        setDeleteLoading(false)
+      }
+  }
+  
+
   function closeRejectModal() {
     setRejectModalOpen(false);
     setRejectReason("");
+  }
+  async function BlockAndUnblockTheUser(){
+    try{
+      setBlockLoading(true)
+      const fd = new FormData()
+      
+      let block  = profile?.is_block == "0" ? "1" : "0"
+     
+      fd.append("user_id" , id  )
+      fd.append("is_block" , block)
+      fd.append("block_reason" , blockDescription)
+      const res = await api.post('/Wb/block_user' , fd)
+      if(res.data.status == 0) {
+        toast.success(res.data.message)
+        setBlockModal(false)
+        refetchProfile()
+        setBlockDescription("")
+
+      }else {
+        toast.error(res.data.message)
+        setBlockModal(false)
+        setBlockDescription("")
+      }
+
+    }catch(e:any){
+      toast.error(e)
+      console.log(e)
+    }finally{
+      setBlockLoading(false)
+    }
   }
 
   function handleRejectSubmit() {
@@ -203,6 +264,28 @@ export default function UserProfilePage() {
               >
                 Reject
               </Button>
+              {
+                profile?.is_block == "0" ?  <Button
+                size="sm"
+                className="bg-orange-500 hover:bg-orange-700 dark:bg-orange-500"
+                onClick={()=> setBlockModal(true)}
+                disabled={actionLoading}
+              >
+                Block
+              </Button> :  <Button
+                size="sm"
+                loading={blockLoading}
+                className="bg-orange-500 hover:bg-orange-700 dark:bg-orange-500"
+                onClick={BlockAndUnblockTheUser}
+                
+              >
+                Unblock
+              </Button>
+              }
+              <Button  size="sm" className="bg-red-700 hover:bg-red-800 dark:bg-red-700" onClick={()=> setDeletModal(true)}>
+                  Delete
+              </Button>
+              
             </div>
           </div>
 
@@ -400,6 +483,55 @@ export default function UserProfilePage() {
           </div>
         </div>
       </div>
+      {/* block modal */}
+      <Modal isOpen={blockModal}  onClose={()=> setBlockModal(false)}>
+        <div className="p-5 mt-10">
+        <h1 className="text-white  text-xl">Enter the Reason for block</h1>
+        <div>
+          <TextArea onChange={(value) => setBlockDescription(value)} value={blockDescription}  className="mt-6"></TextArea>
+          
+        </div>
+        <div className="flex gap-5 mt-5 justify-center">
+          <Button loading={blockLoading} onClick={BlockAndUnblockTheUser}>Submit</Button>
+          <Button onClick={()=> setBlockModal(false)} className="bg-red-600 hover:bg-red-700">Cancle</Button>
+        </div>
+        </div>
+        
+      </Modal>
+      {/* delete modal */}
+      <Modal isOpen={deleteModal} onClose={() => setDeletModal(false)}>
+  <div className="p-6">
+    
+    <h2 className="text-lg text-white font-semibold mb-3">
+      Delete User
+    </h2>
+
+    <p className="text-sm text-white mb-6">
+      Are you sure you want to delete this user? If you delete the user, all ads related to this user will also be permanently deleted.
+    </p>
+
+    <div className="flex justify-end gap-3">
+      
+      <Button
+        onClick={() => setDeletModal(false)}
+        className=""
+      >
+        Cancel
+      </Button>
+
+      <Button
+      loading={deleteLoading}
+        onClick={handleDeleteUser}
+        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+      >
+        Yes, Delete
+      </Button>
+
     </div>
+  </div>
+</Modal>
+    </div>
+   
+   
   );
 }

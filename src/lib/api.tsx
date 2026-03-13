@@ -1,4 +1,5 @@
 import axios from "axios";
+import { title } from "process";
 
 // Must match auth slice storage key (redux/slices/authSlices.ts uses "user")
 const AUTH_STORAGE_KEY = "user";
@@ -188,6 +189,7 @@ export interface UserProfileData {
   role: string;
   name: string | null;
   email: string;
+  is_block : string 
   mobile : string ;
   password?: string;
   wallet_balance?: string;
@@ -504,6 +506,8 @@ export interface ApiCity {
   id: string;
   state_id: string;
   name: string;
+  meta_title : string ; 
+  meta_description : string ; 
   description?: string;
   img?: string;
   top_cities?: string | number;
@@ -533,12 +537,16 @@ export interface StateWithCitiesApiItem {
   id: string;
   name: string;
   img?: string;
+  meta_title : string ;
+  meta_description : string ;
   description?: string;
   created_at: string;
   cities: {
     id: string;
     state_id: string;
     name: string;
+    meta_title : string ;
+  meta_description : string ;
     description?: string;
     image?: string;
     top_cities?: string | number;
@@ -555,6 +563,9 @@ export interface GetStateCitiesResponse {
 export interface StateWithCitiesItem {
   id: string;
   name: string;
+  meta_title : string ;
+  meta_description : string ;
+
   img?: string;
   description?: string;
   cities: ApiCity[];
@@ -575,12 +586,16 @@ export async function getStateCitiesApi(): Promise<StateWithCitiesItem[]> {
   return data.data.map((state) => ({
     id: state.id,
     name: state.name,
+    meta_title : state.meta_title,
+    meta_description : state.meta_description,
     img: stateImageUrl(state.img),
     description: state.description ?? undefined,
       cities: (state.cities ?? []).map((c) => ({
         id: c.id,
         state_id: c.state_id,
         name: c.name,
+        meta_title : c.meta_title,
+        meta_description : c.meta_description , 
         description: c.description ?? undefined,
         img: c.image?.trim() ? stateImageUrl(c.image) : undefined,
         top_cities: c.top_cities ?? undefined,
@@ -599,11 +614,15 @@ export interface AddStateResponse {
 export async function addStateApi(
   name: string,
   description: string,
+  meta_title :string ,
+  meta_description : string ,
   image?: File
 ): Promise<AddStateResponse> {
   const formData = new FormData();
   formData.append("name", name.trim());
   formData.append("description", description.trim());
+  formData.append('meta_title' , meta_title)
+  formData.append('meta_description' , meta_description)
   if (image) formData.append("image", image);
   const { data } = await api.post<AddStateResponse>("/Wb/add_state", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -620,11 +639,13 @@ export interface UpdateStateResponse {
 
 export async function updateStateApi(
   stateId: string,
-  payload: { name: string; description?: string; image?: File }
+  payload: { name: string; meta_title : string ; meta_description : string ;  description?: string; image?: File }
 ): Promise<UpdateStateResponse> {
   const formData = new FormData();
   formData.append("state_id", stateId);
   formData.append("name", payload.name.trim());
+  formData.append("meta_title", payload.meta_title);
+  formData.append("meta_description", payload.meta_description);
   formData.append("description", payload.description ?? "");
   if (payload.image) formData.append("image", payload.image);
   const { data } = await api.post<UpdateStateResponse>("/Wb/update_state", formData, {
@@ -643,17 +664,22 @@ export interface AddCityResponse {
 export async function addCityApi(
   stateId: string,
   name: string,
+  meta_title : string ,
+  meta_description : string,
   description: string,
   image?: File
 ): Promise<AddCityResponse> {
   const formData = new FormData();
   formData.append("state_id", stateId);
   formData.append("name", name.trim());
+  formData.append("meta_title", meta_title)
+  formData.append("meta_description" , meta_description)
   formData.append("description", description.trim());
   if (image) formData.append("image", image);
   const { data } = await api.post<AddCityResponse>("/Wb/add_city", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  console.log(name , meta_title , meta_description , description)
   return data;
 }
 
@@ -682,11 +708,14 @@ export interface UpdateCityResponse {
 export async function updateCityApi(
   cityId: string,
   stateId: string,
-  payload: { name: string; description?: string; image?: File; top_cities?: "0" | "1" }
+  
+  payload: { name: string; meta_title : string  ; meta_description :string ; description?: string; image?: File; top_cities?: "0" | "1" }
 ): Promise<UpdateCityResponse> {
   const formData = new FormData();
   formData.append("city_id", cityId);
   formData.append("state_id", stateId);
+  formData.append("meta_title" , payload.meta_title)
+  formData.append("meta_description" , payload.meta_description)
   formData.append("name", payload.name.trim());
   formData.append("description", payload.description ?? "");
   if (payload.image) formData.append("image", payload.image);

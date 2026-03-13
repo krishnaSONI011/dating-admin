@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { useDropzone } from "react-dropzone";
 import Badge from "@/components/ui/badge/Badge";
+import TextEditor from "@/components/TextEditor";
 
 export default function LocationsPage() {
   const [states, setStates] = useState<StateWithCitiesItem[]>([]);
@@ -44,24 +45,35 @@ export default function LocationsPage() {
   const [stateForm, setStateForm] = useState<{
     name: string;
     description: string;
+    meta_title : string ;
+    meta_description : string ;
     imageFile: File | null;
-  }>({ name: "", description: "", imageFile: null });
+  }>({ name: "", description: "",meta_title : '' , meta_description : '' ,  imageFile: null });
+  
   const [localAreaForm, setLocalAreaForm] = useState<{
     name: string;
     description: string;
+    meta_title : string 
+    
+    meta_description : string ;
     imageFile: File | null;
-  }>({ name: "", description: "", imageFile: null });
+  }>({ name: "", description: "",meta_title : "" , meta_description: "" ,  imageFile: null });
   const [editForm, setEditForm] = useState<{
     name: string;
     description: string;
+    meta_title : string 
+    meta_description : string ;
     imageFile: File | null;
-  }>({ name: "", description: "", imageFile: null });
+    
+  }>({ name: "", description: "",meta_title : "" , meta_description: "", imageFile: null });
   const [editCityForm, setEditCityForm] = useState<{
     name: string;
     description: string;
+    meta_title : string
+    meta_description: string
     imageFile: File | null;
     top_cities: "0" | "1";
-  }>({ name: "", description: "", imageFile: null, top_cities: "0" });
+  }>({ name: "", description: "",meta_title : "" , meta_description: "" , imageFile: null, top_cities: "0" });
 
   const refetchLocations = () => {
     getStateCitiesApi()
@@ -106,10 +118,10 @@ export default function LocationsPage() {
       return;
     }
     setSavingState(true);
-    addStateApi(name, description, stateForm.imageFile)
+    addStateApi(name, description,stateForm.meta_title , stateForm.meta_description, stateForm.imageFile)
       .then(() => {
         toast.success("State added successfully.");
-        setStateForm({ name: "", description: "", imageFile: null });
+        setStateForm({ name: "", description: "",meta_title : '', meta_description : '',  imageFile: null });
         setOpenStateModal(false);
         refetchLocations();
       })
@@ -128,10 +140,17 @@ export default function LocationsPage() {
       return;
     }
     setSavingCity(true);
-    addCityApi(selectedStateId, name, description, localAreaForm.imageFile ?? undefined)
+    addCityApi(
+      selectedStateId,
+      name,
+      localAreaForm.meta_title,
+      localAreaForm.meta_description,
+      description,
+      localAreaForm.imageFile ?? undefined
+    )
       .then(() => {
         toast.success("City added successfully.");
-        setLocalAreaForm({ name: "", description: "", imageFile: null });
+        setLocalAreaForm({ name: "", meta_title: '' , meta_description:'', description: "", imageFile: null });
         setOpenLocalAreaModal(false);
         setSelectedStateId(null);
         refetchLocations();
@@ -180,6 +199,8 @@ export default function LocationsPage() {
     setEditForm({
       name: state.name,
       description: state.description ?? "",
+      meta_description : state.meta_description ?? '',
+      meta_title : state.meta_title ?? '' , 
       imageFile: null,
     });
     setOpenEditStateModal(true);
@@ -188,7 +209,7 @@ export default function LocationsPage() {
   const closeEditStateModal = () => {
     setOpenEditStateModal(false);
     setEditingState(null);
-    setEditForm({ name: "", description: "", imageFile: null });
+    setEditForm({ name: "",meta_title : '' , meta_description :'',  description: "", imageFile: null });
   };
 
   const handleUpdateState = () => {
@@ -201,6 +222,8 @@ export default function LocationsPage() {
     setUpdatingStateId(editingState.id);
     updateStateApi(editingState.id, {
       name,
+      meta_title: editForm.meta_title,
+      meta_description: editForm.meta_description,
       description: editForm.description ?? "",
       image: editForm.imageFile ?? undefined,
     })
@@ -229,6 +252,8 @@ export default function LocationsPage() {
     setEditingCity(city);
     setEditCityForm({
       name: city.name,
+      meta_title : city.meta_title,
+      meta_description : city.meta_description,
       description: city.description ?? "",
       imageFile: null,
       top_cities: String(city.top_cities ?? "0") === "1" ? "1" : "0",
@@ -239,7 +264,7 @@ export default function LocationsPage() {
   const closeEditCityModal = () => {
     setOpenEditCityModal(false);
     setEditingCity(null);
-    setEditCityForm({ name: "", description: "", imageFile: null, top_cities: "0" });
+    setEditCityForm({ name: "", description: "",meta_title: '' , meta_description : "",  imageFile: null, top_cities: "0" });
   };
 
   const handleUpdateCity = () => {
@@ -257,6 +282,8 @@ export default function LocationsPage() {
     updateCityApi(editingCity.id, editingCity.state_id, {
       name,
       description: editCityForm.description ?? "",
+      meta_description : editCityForm.meta_description ?? '',
+      meta_title : editCityForm.meta_title ?? "",
       image: editCityForm.imageFile ?? undefined,
       top_cities: editCityForm.top_cities,
     })
@@ -545,7 +572,7 @@ export default function LocationsPage() {
         isOpen={openStateModal}
         onClose={() => {
           setOpenStateModal(false);
-          setStateForm({ name: "", description: "", imageFile: null });
+          setStateForm({ name: "",meta_title : '' , meta_description : '',  description: "", imageFile: null });
         }}
         showCloseButton={true}
       >
@@ -560,6 +587,30 @@ export default function LocationsPage() {
                 value={stateForm.name}
                 onChange={(e) =>
                   setStateForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">State Meta Title</Label>
+              <Input
+                placeholder="meta title"
+                type="text"
+                value={stateForm.meta_title}
+                onChange={(e) =>
+                  setStateForm((prev) => ({ ...prev, meta_title: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">State Meta Title</Label>
+              <Input
+                placeholder="meta title"
+                type="text"
+                value={stateForm.meta_description}
+                onChange={(e) =>
+                  setStateForm((prev) => ({ ...prev, meta_description: e.target.value }))
                 }
                 className="w-full"
               />
@@ -591,22 +642,20 @@ export default function LocationsPage() {
               </div>
             </div>
             <div>
-              <RichTextEditor
-                label="Page description (required)"
-                value={stateForm.description}
-                onChange={(html) =>
-                  setStateForm((prev) => ({ ...prev, description: html }))
-                }
-                placeholder="Add a description with bold, links, lists…"
-                minHeight="160px"
-                disabled={!!savingState}
-              />
+              
+              
+              <TextEditor
+  description={stateForm.description}
+  onChange={(html) =>
+    setStateForm((prev) => ({ ...prev, description: html }))
+  }
+/>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 onClick={() => {
                   setOpenStateModal(false);
-                  setStateForm({ name: "", description: "", imageFile: null });
+                  setStateForm({ name: "",meta_description:'', meta_title : '' ,  description: "", imageFile: null });
                 }}
                 className="bg-gray-600 hover:bg-gray-700"
                 disabled={savingState}
@@ -638,6 +687,30 @@ export default function LocationsPage() {
                 value={editForm.name}
                 onChange={(e) =>
                   setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">State meta title</Label>
+              <Input
+                placeholder="e.g., California, New York, Texas"
+                type="text"
+                value={editForm.meta_title}
+                onChange={(e) =>
+                  setEditForm((prev) => ({ ...prev, meta_title: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">State meta description</Label>
+              <Input
+                placeholder="e.g., California, New York, Texas"
+                type="text"
+                value={editForm.meta_description}
+                onChange={(e) =>
+                  setEditForm((prev) => ({ ...prev, meta_description: e.target.value }))
                 }
                 className="w-full"
               />
@@ -679,16 +752,13 @@ export default function LocationsPage() {
               </div>
             </div>
             <div>
-              <RichTextEditor
-                label="Page description"
-                value={editForm.description}
-                onChange={(html) =>
-                  setEditForm((prev) => ({ ...prev, description: html }))
-                }
-                placeholder="Add a description with bold, links, lists…"
-                minHeight="160px"
-                disabled={!!updatingStateId}
-              />
+              
+              <TextEditor
+  description={editForm.description}
+  onChange={(html) =>
+    setEditForm((prev) => ({ ...prev, description: html }))
+  }
+/>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
@@ -714,7 +784,7 @@ export default function LocationsPage() {
         isOpen={openLocalAreaModal}
         onClose={() => {
           setOpenLocalAreaModal(false);
-          setLocalAreaForm({ name: "", description: "", imageFile: null });
+          setLocalAreaForm({ name: "", meta_description: '' , meta_title : "" , description: "", imageFile: null });
           setSelectedStateId(null);
         }}
         showCloseButton={true}
@@ -730,6 +800,30 @@ export default function LocationsPage() {
                 value={localAreaForm.name}
                 onChange={(e) =>
                   setLocalAreaForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">City Meta Title</Label>
+              <Input
+                placeholder="meta title"
+                type="text"
+                value={localAreaForm.meta_title}
+                onChange={(e) =>
+                  setLocalAreaForm((prev) => ({ ...prev, meta_title: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">City Meta Description</Label>
+              <Input
+                placeholder="meta Description"
+                type="text"
+                value={localAreaForm.meta_description}
+                onChange={(e) =>
+                  setLocalAreaForm((prev) => ({ ...prev, meta_description: e.target.value }))
                 }
                 className="w-full"
               />
@@ -760,7 +854,7 @@ export default function LocationsPage() {
                 </div>
               </div>
             </div>
-            <div>
+            {/* <div>
               <RichTextEditor
                 label="Page description"
                 placeholder="Add a description with bold, links, lists…"
@@ -772,12 +866,20 @@ export default function LocationsPage() {
                 disabled={!!savingCity}
               />
               <p className="mt-1 text-xs text-gray-400">City description is required.</p>
+            </div> */}
+            <div>
+            <TextEditor
+           description={localAreaForm.description}
+            onChange={(html) =>
+               setLocalAreaForm((prev) => ({ ...prev, description: html }))
+  }
+/>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 onClick={() => {
                   setOpenLocalAreaModal(false);
-                  setLocalAreaForm({ name: "", description: "", imageFile: null });
+                  setLocalAreaForm({ name: "",meta_description :'', meta_title : "", description: "", imageFile: null });
                   setSelectedStateId(null);
                 }}
                 className="bg-gray-600 hover:bg-gray-700"
@@ -810,6 +912,30 @@ export default function LocationsPage() {
                 value={editCityForm.name}
                 onChange={(e) =>
                   setEditCityForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">City Meta Title</Label>
+              <Input
+                placeholder="e.g., Indore, Ujjain"
+                type="text"
+                value={editCityForm.meta_title}
+                onChange={(e) =>
+                  setEditCityForm((prev) => ({ ...prev, meta_title: e.target.value }))
+                }
+                className="w-full"
+              />
+            </div>
+            <div>
+              <Label className="mb-2">City Meta Description </Label>
+              <Input
+                placeholder="e.g., Indore, Ujjain"
+                type="text"
+                value={editCityForm.meta_description}
+                onChange={(e) =>
+                  setEditCityForm((prev) => ({ ...prev, meta_description: e.target.value }))
                 }
                 className="w-full"
               />
@@ -850,7 +976,7 @@ export default function LocationsPage() {
                 </div>
               </div>
             </div>
-            <div>
+            {/* <div>
               <RichTextEditor
                 label="City description"
                 value={editCityForm.description}
@@ -861,6 +987,12 @@ export default function LocationsPage() {
                 minHeight="160px"
                 disabled={!!updatingCityId}
               />
+            </div> */}
+            <div>
+              <TextEditor description={editCityForm.description}
+            onChange={(html) =>
+              setEditCityForm((prev) => ({ ...prev, description: html }))
+  }/>
             </div>
             <div>
               <Label className="mb-2">Top City</Label>

@@ -61,7 +61,7 @@ export default function State() {
                 <h2 className="text-2xl font-semibold">States</h2>
 
                 <button
-                    onClick={() => router.push("/states/add")}
+                    onClick={() => router.push("/seo-tools/state/add")}
                     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg"
                 >
                     + Add State

@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
     icon: <PageIcon />,
     subItems: [{ name: "Homepage Setting", path: "/seo-tools/homepage", pro: false },
       // {name : "Pages setting" , path:"/seo-tools/page", pro:false},
-      {name : "City" , path:"/seo-tools/locations", pro:false},
+      {name : "City" , path:"/seo-tools/city", pro:false},
       {name : "State" , path:"/seo-tools/state", pro:false},
       {name : "Local Area" , path:"/seo-tools/local-area", pro:false},
     ],
