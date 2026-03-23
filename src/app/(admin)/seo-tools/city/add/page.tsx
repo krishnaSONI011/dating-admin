@@ -1,14 +1,16 @@
 'use client'
 
 import Input from "@/components/form/input/InputField";
+import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import TextEditor from "@/components/TextEditor";
 import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 
 export default function AddCity(){
-
+    const router = useRouter()
     const [stateData,setStateData] = useState<any[]>([])
     const fileRef = useRef<HTMLInputElement | null>(null)
     const [form,setForm] = useState({
@@ -16,7 +18,8 @@ export default function AddCity(){
         name:"",
         meta_title:"",
         meta_description:"",
-        description:""
+        description:"",
+        keyword : ""
     })
 
     const [image,setImage] = useState<File | null>(null)
@@ -90,6 +93,7 @@ export default function AddCity(){
             fd.append("meta_title",form.meta_title)
             fd.append("meta_description",form.meta_description)
             fd.append("description",form.description)
+            fd.append("keyword" , form.keyword)
 
             if(image){
                 fd.append("image",image)
@@ -108,13 +112,14 @@ export default function AddCity(){
             if(res.data.status == 0){
 
                 toast.success("City added successfully")
-
+                router.push("/seo-tools/city/")
                 setForm({
                     state_id:"",
                     name:"",
                     meta_title:"",
                     meta_description:"",
-                    description:""
+                    description:"",
+                    keyword : ""
                 })
 
                 setImage(null)
@@ -195,6 +200,15 @@ export default function AddCity(){
                     onChange={handleChange}
                 />
 
+            </div>
+            <div className="mt-5">
+                <Label>* Keywords</Label>
+                <TextArea
+                    name="keyword"
+                    value={form.keyword}
+                    onChange={(val) => setForm({ ...form, keyword: val })}
+                    placeholder="Keywords"
+                />
             </div>
 
             {/* DESCRIPTION */}

@@ -6,7 +6,7 @@ import Label from "@/components/form/Label";
 import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/Select";
 import Button from "@/components/ui/button/Button";
-import {
+import api, {
   getAdminNotificationsApi,
   getAllUsersApi,
   sendNotificationApi,
@@ -14,7 +14,7 @@ import {
   type ApiUser,
 } from "@/lib/api";
 import { toast } from "react-toastify";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 
 type SendType = "all" | "selected";
@@ -24,6 +24,11 @@ export default function NotificationsPage() {
   const [message, setMessage] = useState("");
   const [type, setType] = useState<SendType>("all");
   const [sending, setSending] = useState(false);
+
+  // image states
+  const [image, setImage] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   const [list, setList] = useState<ApiNotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,9 +49,7 @@ export default function NotificationsPage() {
         setTotalRecords(res.total_records || 0);
       })
       .catch((err) => {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to load notifications."
-        );
+        toast.error(err instanceof Error ? err.message : "Failed to load notifications.");
         setList([]);
       })
       .finally(() => setLoading(false));
@@ -56,7 +59,6 @@ export default function NotificationsPage() {
     fetchList(page);
   }, [page, fetchList]);
 
-  // Load all approved users once for \"selected\" notifications
   useEffect(() => {
     let cancelled = false;
     getAllUsersApi()
@@ -70,9 +72,7 @@ export default function NotificationsPage() {
       .catch((err) => {
         if (!cancelled) {
           toast.error(
-            err instanceof Error
-              ? err.message
-              : "Failed to load users for selection."
+            err instanceof Error ? err.message : "Failed to load users for selection."
           );
           setApprovedUsers([]);
         }
@@ -80,9 +80,7 @@ export default function NotificationsPage() {
       .finally(() => {
         if (!cancelled) setLoadingUsers(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const filteredApprovedUsers = useMemo(() => {
@@ -102,52 +100,79 @@ export default function NotificationsPage() {
     );
   };
 
-  const handleSend = () => {
+  /* ===== IMAGE HANDLERS ===== */
+
+  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // revoke old blob URL to avoid memory leak
+    if (preview && preview.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
+    }
+
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  function removeImage() {
+    if (preview && preview.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
+    }
+    setImage(null);
+    setPreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  /* ===== RESET ===== */
+
+  function resetForm() {
+    setTitle("");
+    setMessage("");
+    setSelectedUserIds([]);
+    setUserSearch("");
+    removeImage();
+  }
+
+  /* ===== SEND ===== */
+
+  const handleSend = async () => {
     const t = title.trim();
     const m = message.trim();
-    if (!t) {
-      toast.error("Title is required.");
+    if (!t) { toast.error("Title is required."); return; }
+    if (!m) { toast.error("Message is required."); return; }
+    if (type === "selected" && selectedUserIds.length === 0) {
+      toast.error("Select at least one approved user.");
       return;
     }
-    if (!m) {
-      toast.error("Message is required.");
-      return;
-    }
-    if (type === "selected") {
-      if (selectedUserIds.length === 0) {
-        toast.error("Select at least one approved user.");
-        return;
+    try {
+      setSending(true);
+
+      // build FormData so image can be included
+      const fd = new FormData();
+      fd.append("title", t);
+      fd.append("message", m);
+      fd.append("type", type);
+      if (type === "selected") {
+        selectedUserIds.forEach((id) => fd.append("user_ids[]", id));
       }
-      setSending(true);
-      sendNotificationApi(t, m, "selected", selectedUserIds)
-        .then(() => {
-          toast.success("Notification sent to selected users.");
-          setTitle("");
-          setMessage("");
-          setSelectedUserIds([]);
-          setUserSearch("");
-          setPage(1);
-          fetchList(1);
-        })
-        .catch((err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to send notification.");
-        })
-        .finally(() => setSending(false));
-    } else {
-      setSending(true);
-      sendNotificationApi(t, m, "all")
-        .then(() => {
-          toast.success("Notification sent to all users.");
-          setTitle("");
-          setMessage("");
-          setPage(1);
-          fetchList(1);
-        })
-        .catch((err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to send notification.");
-        })
-        .finally(() => setSending(false));
+      if (image) {
+        fd.append("image", image);
+      } else {
+        fd.append("image", "");
+      }
+      const res = await api.post('/Wb/send_notification', fd)
+      if (res.data.status == 0) {
+        toast.success(res.data.message)
+        resetForm()
+      } else { toast.error(res.data.message) }
+    } catch (e) {
+      console.log(e)
+    } finally {
+      setSending(false)
     }
+
+
   };
 
   return (
@@ -156,6 +181,8 @@ export default function NotificationsPage() {
       <div className="space-y-6">
         <ComponentCard title="Send notification">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+            {/* TITLE */}
             <div className="md:col-span-2">
               <Label>Title</Label>
               <Input
@@ -166,6 +193,8 @@ export default function NotificationsPage() {
                 className="w-full"
               />
             </div>
+
+            {/* MESSAGE */}
             <div className="md:col-span-2">
               <Label>Message</Label>
               <textarea
@@ -176,6 +205,38 @@ export default function NotificationsPage() {
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
               />
             </div>
+
+            {/* IMAGE UPLOAD */}
+            <div className="md:col-span-2">
+              <Label>Image (optional)</Label>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileRef}
+                onChange={handleImage}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              />
+
+              {/* IMAGE PREVIEW */}
+              {preview && (
+                <div className="mt-3 relative inline-block">
+                  <img
+                    src={preview}
+                    alt="Notification preview"
+                    className="h-32 w-auto rounded-lg border border-gray-300 object-cover dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white text-xs hover:bg-red-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* SEND TO */}
             <div>
               <Label>Send to</Label>
               <Select
@@ -189,6 +250,8 @@ export default function NotificationsPage() {
                 onChange={(val) => setType(val as SendType)}
               />
             </div>
+
+            {/* SELECTED USERS */}
             {type === "selected" && (
               <div className="md:col-span-2 space-y-3">
                 <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -249,6 +312,7 @@ export default function NotificationsPage() {
               </div>
             )}
           </div>
+
           <div className="mt-4 flex justify-end">
             <Button onClick={handleSend} disabled={sending}>
               {sending ? "Sending…" : "Send notification"}
@@ -256,58 +320,54 @@ export default function NotificationsPage() {
           </div>
         </ComponentCard>
 
+        {/* NOTIFICATION HISTORY */}
         <ComponentCard title="Notification history">
           {loading ? (
-            <p className="py-8 text-center text-gray-500 dark:text-gray-400">
-              Loading…
-            </p>
+            <p className="py-8 text-center text-gray-500 dark:text-gray-400">Loading…</p>
           ) : list.length === 0 ? (
-            <p className="py-8 text-center text-gray-500 dark:text-gray-400">
-              No notifications yet.
-            </p>
+            <p className="py-8 text-center text-gray-500 dark:text-gray-400">No notifications yet.</p>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader className="border-b border-gray-200 dark:border-gray-700">
                     <TableRow>
-                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Title
-                      </TableCell>
-                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Message
-                      </TableCell>
-                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Type
-                      </TableCell>
-                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Users
-                      </TableCell>
-                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">
-                        Date
-                      </TableCell>
+                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Title</TableCell>
+                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Message</TableCell>
+
+                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Type</TableCell>
+                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Users</TableCell>
+                      <TableCell isHeader className="px-4 py-3 text-sm font-medium text-gray-600 dark:text-gray-400">Date</TableCell>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-gray-100 dark:divide-gray-700/50">
                     {list.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="px-4 py-3 text-gray-800 dark:text-gray-200">
-                          {row.title}
-                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-800 dark:text-gray-200">{row.title}</TableCell>
                         <TableCell className="max-w-xs truncate px-4 py-3 text-gray-600 dark:text-gray-400">
                           <span title={row.message}>{row.message}</span>
                         </TableCell>
+
+                        {/* IMAGE COLUMN in history table */}
+                        {/* <TableCell className="px-4 py-3">
+                          {row.image ? (
+                            <img
+                              src={row.image}
+                              alt="notification"
+                              className="h-10 w-10 rounded object-cover border border-gray-200 dark:border-gray-700"
+                            />
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </TableCell> */}
+
                         <TableCell className="px-4 py-3">
                           <span className="rounded bg-gray-100 px-2 py-0.5 text-sm dark:bg-gray-700">
                             {row.type === "all" ? "All users" : "Selected"}
                           </span>
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                          {row.total_users}
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                          {row.created_at}
-                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">{row.total_users}</TableCell>
+                        <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{row.created_at}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -319,20 +379,8 @@ export default function NotificationsPage() {
                     Page {page} of {totalPages} ({totalRecords} total)
                   </p>
                   <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page >= totalPages}
-                    >
-                      Next
-                    </Button>
+                    <Button size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Previous</Button>
+                    <Button size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</Button>
                   </div>
                 </div>
               )}

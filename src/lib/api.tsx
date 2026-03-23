@@ -9,8 +9,8 @@ const baseURL =
 
 const api = axios.create({
   baseURL,
-  timeout: 10000,
-  
+  timeout: 20000,
+
 });
 
 /* =========================
@@ -27,7 +27,7 @@ api.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     }
     return config;
   },
@@ -189,8 +189,8 @@ export interface UserProfileData {
   role: string;
   name: string | null;
   email: string;
-  is_block : string 
-  mobile : string ;
+  is_block: string
+  mobile: string;
   password?: string;
   wallet_balance?: string;
   is_verified: string | number;
@@ -292,12 +292,13 @@ export interface ApiAd {
   id: string;
   user_id: string;
   name: string;
-  slug:string ;
+  slug: string;
   email: string;
   gender: string;
   mobile: string;
   state: string;
   city: string;
+  is_promoted : string ;
   description: string;
   is_approved: string;
   rejection_reason: string | null;
@@ -506,8 +507,8 @@ export interface ApiCity {
   id: string;
   state_id: string;
   name: string;
-  meta_title : string ; 
-  meta_description : string ; 
+  meta_title: string;
+  meta_description: string;
   description?: string;
   img?: string;
   top_cities?: string | number;
@@ -537,16 +538,16 @@ export interface StateWithCitiesApiItem {
   id: string;
   name: string;
   img?: string;
-  meta_title : string ;
-  meta_description : string ;
+  meta_title: string;
+  meta_description: string;
   description?: string;
   created_at: string;
   cities: {
     id: string;
     state_id: string;
     name: string;
-    meta_title : string ;
-  meta_description : string ;
+    meta_title: string;
+    meta_description: string;
     description?: string;
     image?: string;
     top_cities?: string | number;
@@ -563,8 +564,8 @@ export interface GetStateCitiesResponse {
 export interface StateWithCitiesItem {
   id: string;
   name: string;
-  meta_title : string ;
-  meta_description : string ;
+  meta_title: string;
+  meta_description: string;
 
   img?: string;
   description?: string;
@@ -586,21 +587,21 @@ export async function getStateCitiesApi(): Promise<StateWithCitiesItem[]> {
   return data.data.map((state) => ({
     id: state.id,
     name: state.name,
-    meta_title : state.meta_title,
-    meta_description : state.meta_description,
+    meta_title: state.meta_title,
+    meta_description: state.meta_description,
     img: stateImageUrl(state.img),
     description: state.description ?? undefined,
-      cities: (state.cities ?? []).map((c) => ({
-        id: c.id,
-        state_id: c.state_id,
-        name: c.name,
-        meta_title : c.meta_title,
-        meta_description : c.meta_description , 
-        description: c.description ?? undefined,
-        img: c.image?.trim() ? stateImageUrl(c.image) : undefined,
-        top_cities: c.top_cities ?? undefined,
-        created_at: c.created_at,
-      })),
+    cities: (state.cities ?? []).map((c) => ({
+      id: c.id,
+      state_id: c.state_id,
+      name: c.name,
+      meta_title: c.meta_title,
+      meta_description: c.meta_description,
+      description: c.description ?? undefined,
+      img: c.image?.trim() ? stateImageUrl(c.image) : undefined,
+      top_cities: c.top_cities ?? undefined,
+      created_at: c.created_at,
+    })),
   }));
 }
 
@@ -614,15 +615,15 @@ export interface AddStateResponse {
 export async function addStateApi(
   name: string,
   description: string,
-  meta_title :string ,
-  meta_description : string ,
+  meta_title: string,
+  meta_description: string,
   image?: File
 ): Promise<AddStateResponse> {
   const formData = new FormData();
   formData.append("name", name.trim());
   formData.append("description", description.trim());
-  formData.append('meta_title' , meta_title)
-  formData.append('meta_description' , meta_description)
+  formData.append('meta_title', meta_title)
+  formData.append('meta_description', meta_description)
   if (image) formData.append("image", image);
   const { data } = await api.post<AddStateResponse>("/Wb/add_state", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -639,7 +640,7 @@ export interface UpdateStateResponse {
 
 export async function updateStateApi(
   stateId: string,
-  payload: { name: string; meta_title : string ; meta_description : string ;  description?: string; image?: File }
+  payload: { name: string; meta_title: string; meta_description: string; description?: string; image?: File }
 ): Promise<UpdateStateResponse> {
   const formData = new FormData();
   formData.append("state_id", stateId);
@@ -664,8 +665,8 @@ export interface AddCityResponse {
 export async function addCityApi(
   stateId: string,
   name: string,
-  meta_title : string ,
-  meta_description : string,
+  meta_title: string,
+  meta_description: string,
   description: string,
   image?: File
 ): Promise<AddCityResponse> {
@@ -673,13 +674,13 @@ export async function addCityApi(
   formData.append("state_id", stateId);
   formData.append("name", name.trim());
   formData.append("meta_title", meta_title)
-  formData.append("meta_description" , meta_description)
+  formData.append("meta_description", meta_description)
   formData.append("description", description.trim());
   if (image) formData.append("image", image);
   const { data } = await api.post<AddCityResponse>("/Wb/add_city", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  console.log(name , meta_title , meta_description , description)
+  console.log(name, meta_title, meta_description, description)
   return data;
 }
 
@@ -708,14 +709,14 @@ export interface UpdateCityResponse {
 export async function updateCityApi(
   cityId: string,
   stateId: string,
-  
-  payload: { name: string; meta_title : string  ; meta_description :string ; description?: string; image?: File; top_cities?: "0" | "1" }
+
+  payload: { name: string; meta_title: string; meta_description: string; description?: string; image?: File; top_cities?: "0" | "1" }
 ): Promise<UpdateCityResponse> {
   const formData = new FormData();
   formData.append("city_id", cityId);
   formData.append("state_id", stateId);
-  formData.append("meta_title" , payload.meta_title)
-  formData.append("meta_description" , payload.meta_description)
+  formData.append("meta_title", payload.meta_title)
+  formData.append("meta_description", payload.meta_description)
   formData.append("name", payload.name.trim());
   formData.append("description", payload.description ?? "");
   if (payload.image) formData.append("image", payload.image);
@@ -827,12 +828,18 @@ export async function sendNotificationApi(
   title: string,
   message: string,
   type: "all" | "selected",
-  userIds: string[] = []
+  userIds: string[] = [],
+  image: File | null = null  
 ): Promise<SendNotificationResponse> {
   const formData = new FormData();
-  formData.append("title", title.trim());
-  formData.append("message", message.trim());
+  formData.append("title", title);
+  formData.append("message", message);
   formData.append("type", type);
+  if (image) {
+    formData.append("image", image);   // ← append file if present
+  } else {
+    formData.append("image", "");      // ← send empty string if no image
+  }
   if (type === "selected" && userIds.length > 0) {
     userIds.forEach((id) => formData.append("user_ids[]", String(id).trim()));
   }
@@ -850,6 +857,8 @@ export interface DashboardCountsResponse {
   data: {
     total_users: number;
     total_ads: number;
+    paid_ads : number ;
+    total_expired_ads : number ;
   };
 }
 

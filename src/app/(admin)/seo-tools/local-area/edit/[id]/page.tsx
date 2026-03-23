@@ -20,6 +20,7 @@ export default function StateEdit() {
     const [meta_title, set_meta_title] = useState("")
     const [meta_description, set_meta_description] = useState("")
     const [description, setDescription] = useState("")
+    const [keyword , setKeyword] = useState('')
     const [image, setImage] = useState<File | null>(null)
     const [preview, setPreview] = useState("")
     const [removeImage, setRemoveImage] = useState(false)
@@ -45,6 +46,7 @@ export default function StateEdit() {
                 set_meta_description(state.meta_description)
                 setDescription(state.description)
                 setPreview(state.img)
+                setKeyword(state.keyword)
 
             }
 
@@ -121,7 +123,7 @@ export default function StateEdit() {
             formData.append("meta_title", meta_title)
             formData.append("meta_description", meta_description)
             formData.append("description", description)
-
+            formData.append("keyword" , keyword)
             if (image) {
                 formData.append("image", image)
             }
@@ -215,14 +217,27 @@ export default function StateEdit() {
 
                 <label className="block mb-2 text-gray-300">Meta Description</label>
 
-                <input
-                    type="text"
+                <textarea
+                    
                     value={meta_description}
                     onChange={(e) => set_meta_description(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
                 />
 
             </div>
+            <div>
+
+                <label className="block mb-2 text-gray-300">Keyword </label>
+
+                <textarea
+                    
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
+                />
+
+            </div>
+
 
             {/* IMAGE */}
 

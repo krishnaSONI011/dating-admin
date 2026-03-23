@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { toast } from "react-toastify"
 import TextEditor from "@/components/TextEditor"
+import TextArea from "@/components/form/input/TextArea"
 
 export default function EditPages() {
 
@@ -18,6 +19,9 @@ export default function EditPages() {
     const [cities, setCities] = useState<any[]>([])
     const [selectedCategory, setSelectedCategory] = useState("")
     const [selectedCity, setSelectedCity] = useState("")
+    const [metaTitle , setMetaTitle] = useState<string>('')
+    const [metaDescription , setMetaDescription] = useState<string>('')
+    const [keyword , setMetaKeyword] = useState<string>('')
     const [loading, setLoading] = useState(false)
 
     // ================= LOAD CATEGORIES =================
@@ -59,6 +63,9 @@ export default function EditPages() {
                 setDescription(page.description)
                 setSelectedCategory(page.cat_slug)
                 setSelectedCity(page.city_slug)
+                setMetaKeyword(page.keyword)
+                setMetaTitle(page.meta_title)
+                setMetaDescription(page.meta_description)
             }
 
         } catch (error) {
@@ -86,12 +93,15 @@ export default function EditPages() {
             setLoading(true)
 
             const formData = new FormData()
-            formData.append("id", id as string)
+            formData.append("page_slug", id as string)
             formData.append("title", title)
             formData.append("description", description)
             formData.append("cat_slug", selectedCategory)
             formData.append("city_slug", selectedCity)
             formData.append("area_slug", "")
+            formData.append("meta_title" , metaTitle)
+            formData.append("meta_description" , metaDescription)
+            formData.append("keyword" , keyword )
 
             const res = await api.post('/Wb/update_pages', formData)
 
@@ -134,7 +144,37 @@ export default function EditPages() {
                     className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
                 />
             </div>
-
+            
+            <div>
+                <label className="block mb-2 text-gray-300">Meta Title</label>
+                <input
+                    type="text"
+                    value={metaTitle}
+                    onChange={(e) => setMetaTitle(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
+                    placeholder="Enter Meta Description"
+                />
+            </div>
+            <div>
+                <label className="block mb-2 text-gray-300">Meta Description</label>
+                <input
+                    type="text"
+                    value={metaDescription}
+                    onChange={(e) => setMetaDescription(e.target.value)}
+                    className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
+                    placeholder="Enter Meta Description"
+                />
+                
+            </div>
+            <div className="mt-5">
+            <label className="block mb-2 text-gray-300">Meta Keyword</label>
+                <TextArea
+                    name="keyword"
+                    value={keyword}
+                    onChange={(val) => setMetaKeyword(val)}
+                    placeholder="Keywords"
+                />
+            </div>
             {/* CATEGORY */}
             <div>
                 <label className="block mb-2 text-gray-300">Category</label>

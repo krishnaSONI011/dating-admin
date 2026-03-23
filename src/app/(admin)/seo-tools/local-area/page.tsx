@@ -187,9 +187,12 @@ export default function LocalArea() {
 
       <div className="flex justify-between">
         <h2 className="text-2xl font-semibold">Local Areas</h2>
-        <button onClick={openAdd} className="bg-green-600 px-4 py-2 rounded-lg">
+        <Link href={'/seo-tools/local-area/add'}>
+        
+        <button  className="bg-green-600 px-4 py-2 rounded-lg">
           + Add Area
         </button>
+        </Link>
       </div>
 
       {/* City Select */}

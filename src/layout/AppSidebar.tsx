@@ -100,7 +100,7 @@ const navItems: NavItem[] = [
     subItems: [{ name: "site setting", path: "/setting/site", pro: false },
       {name : "footer setting" , path:"/setting/footer", pro:false},
       {name : "Contact Setting" , path:"/setting/contact", pro:false},
-      {name : "Service Setting" , path:"/service", pro:false},
+      {name : "Post Ads Service Setting" , path:"/service", pro:false},
       {name : "Password Setting" , path:"/setting/change", pro:false},
      
     ],

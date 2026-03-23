@@ -55,12 +55,12 @@ export default function AdsTable({ ads }: AdsTableProps) {
                 >
                   Email
                 </TableCell>
-                <TableCell
+                {/* <TableCell
                   isHeader
                   className="px-5 py-3 text-theme-xs text-gray-500"
                 >
                   Gender
-                </TableCell>
+                </TableCell> */}
                 <TableCell
                   isHeader
                   className="px-5 py-3 text-theme-xs text-gray-500"
@@ -71,7 +71,7 @@ export default function AdsTable({ ads }: AdsTableProps) {
                   isHeader
                   className="px-5 py-3 text-theme-xs text-gray-500"
                 >
-                  Membership
+                 Promotion
                 </TableCell>
                 <TableCell
                   isHeader
@@ -98,14 +98,14 @@ export default function AdsTable({ ads }: AdsTableProps) {
                     <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
                       {ad.email}
                     </TableCell>
-                    <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
+                    {/* <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
                       {ad.gender}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
                       {ad.city_name ?? ad.city ?? "—"}
                     </TableCell>
                     <TableCell className="px-5 py-4 text-theme-sm text-gray-500 dark:text-gray-400">
-                      {ad.membership}
+                      {ad.is_promoted == "1" ? <Badge size="sm" color={statusBadgeColor[status]}>Promoted</Badge> : <Badge size="sm" color={'warning'}>Not Promoted</Badge>}
                     </TableCell>
                     <TableCell className="px-5 py-4">
                       <Badge size="sm" color={statusBadgeColor[status]}>

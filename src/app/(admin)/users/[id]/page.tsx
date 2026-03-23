@@ -295,7 +295,7 @@ export default function UserProfilePage() {
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Wallet Balance</p>
                 <p className="text-xl font-semibold text-gray-800 dark:text-white/90">
-                  ₹{profile.wallet_balance ?? "0.00"}
+                  Coins {profile.wallet_balance ?? "0.00"}
                 </p>
               </div>
               <Button

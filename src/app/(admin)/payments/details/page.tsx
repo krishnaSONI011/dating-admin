@@ -3,7 +3,6 @@
 import { useEffect, useState, ChangeEvent } from "react"
 import api from "@/lib/api"
 import { toast } from "react-toastify"
-import Image from "next/image"
 
 interface PaymentData {
   id: string
@@ -14,13 +13,14 @@ interface PaymentData {
   status: string
 }
 
-export default function Details(){
+export default function Details() {
 
-  const [loading,setLoading] = useState(false)
-  const [qrPreview,setQrPreview] = useState<string>("")
-  const [qrFile,setQrFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [qrPreview, setQrPreview] = useState<string>("")
+  const [qrFile, setQrFile] = useState<File | null>(null)
+  const [removeQr, setRemoveQr] = useState(false) // ✅ track removal
 
-  const [form,setForm] = useState<PaymentData>({
+  const [form, setForm] = useState<PaymentData>({
     id: "1",
     qr: "",
     upi: "",
@@ -29,22 +29,16 @@ export default function Details(){
     status: "1"
   })
 
-  /* ================= LOAD PAYMENT DETAILS ================= */
+  useEffect(() => { fetchPayment() }, [])
 
-  useEffect(()=>{
-    fetchPayment()
-  },[])
-
-  async function fetchPayment(){
-    try{
+  async function fetchPayment() {
+    try {
       const fd = new FormData()
-      fd.append("payment_id","1")
-
+      fd.append("payment_id", "1")
       const res = await api.post("/Wb/payments_detail", fd)
 
-      if(res.data.status === 0){
+      if (res.data.status === 0) {
         const data = res.data.data
-
         setForm({
           id: data.id,
           qr: data.qr,
@@ -53,90 +47,80 @@ export default function Details(){
           ifsc: data.ifsc,
           status: data.status
         })
-
-        setQrPreview(data.qr)
+        setQrPreview(data.qr || "")
+        setRemoveQr(false)
+        setQrFile(null)
       }
-
-    }catch(e){
+    } catch (e) {
       console.log(e)
     }
   }
 
-  /* ================= HANDLE INPUT ================= */
-
-  function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>){
-    const { name,value } = e.target
-    setForm(prev => ({...prev,[name]:value}))
+  function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
-  function handleQrChange(e: ChangeEvent<HTMLInputElement>){
+  function handleQrChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if(!file) return
-
+    if (!file) return
     setQrFile(file)
     setQrPreview(URL.createObjectURL(file))
+    setRemoveQr(false)
   }
 
-  /* ================= UPDATE PAYMENT ================= */
+  //  Simple delete — just clear preview and flag removal
+  function handleDeleteQr() {
+    setQrPreview("")
+    setQrFile(null)
+    setRemoveQr(true)
+  }
 
-  async function handleUpdate(){
-    try{
+  async function handleUpdate() {
+    try {
       setLoading(true)
 
       const fd = new FormData()
-      fd.append("payment_id",form.id)
-      fd.append("upi",form.upi)
-      fd.append("account_no",form.account_no)
-      fd.append("ifsc",form.ifsc)
-      fd.append("status",form.status)
+      fd.append("payment_id", form.id)
+      fd.append("upi", form.upi)
+      fd.append("account_no", form.account_no)
+      fd.append("ifsc", form.ifsc)
+      fd.append("status", form.status)
 
-      if(qrFile){
-        fd.append("qr",qrFile)
+      if (qrFile) {
+        fd.append("qr", qrFile)
+      } else if (removeQr) {
+       
+        fd.append("remove_image", "1")
       }
 
-      const res = await api.post(
-        "/Wb/update_payments",
-        fd,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      )
+      const res = await api.post("/Wb/update_payments", fd)
 
-      if(res.data.status === 0){
+      if (res.data.status === 0) {
         toast.success("Payment details updated successfully")
         fetchPayment()
-      }else{
+      } else {
         toast.error(res.data.message || "Update failed")
       }
-
-    }catch(e){
+    } catch (e) {
       console.log(e)
       toast.error("Something went wrong")
-    }
-    finally{
+    } finally {
       setLoading(false)
     }
   }
 
-  return(
+  return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
-
       <div className="max-w-3xl mx-auto bg-gray-900 border border-gray-800 rounded-2xl p-8">
 
-        <h1 className="text-3xl font-bold mb-8">
-          Payment Settings
-        </h1>
+        <h1 className="text-3xl font-bold mb-8">Payment Settings</h1>
 
         {/* UPI */}
         <div className="mb-6">
           <label className="block mb-2 text-sm font-semibold">UPI ID</label>
           <input
-            type="text"
-            name="upi"
-            value={form.upi}
-            onChange={handleChange}
+            type="text" name="upi" value={form.upi} onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500"
           />
         </div>
@@ -145,10 +129,7 @@ export default function Details(){
         <div className="mb-6">
           <label className="block mb-2 text-sm font-semibold">Account Number</label>
           <input
-            type="text"
-            name="account_no"
-            value={form.account_no}
-            onChange={handleChange}
+            type="text" name="account_no" value={form.account_no} onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500"
           />
         </div>
@@ -157,10 +138,7 @@ export default function Details(){
         <div className="mb-6">
           <label className="block mb-2 text-sm font-semibold">IFSC Code</label>
           <input
-            type="text"
-            name="ifsc"
-            value={form.ifsc}
-            onChange={handleChange}
+            type="text" name="ifsc" value={form.ifsc} onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500"
           />
         </div>
@@ -169,9 +147,7 @@ export default function Details(){
         <div className="mb-6">
           <label className="block mb-2 text-sm font-semibold">Status</label>
           <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
+            name="status" value={form.status} onChange={handleChange}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-orange-500"
           >
             <option value="1">Active</option>
@@ -190,29 +166,37 @@ export default function Details(){
             className="mb-4"
           />
 
+          {/* Preview with simple Delete button below */}
           {qrPreview && (
-            <div className="relative w-40 h-40 border border-gray-700 rounded-lg overflow-hidden">
-              <img
-                src={qrPreview}
-                alt="QR Preview"
-                
-                className="object-contain"
-              />
+            <div className="mt-2 space-y-2">
+              <div className="w-40 h-40 border border-gray-700 rounded-lg overflow-hidden">
+                <img
+                  src={qrPreview}
+                  alt="QR Preview"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleDeleteQr}
+                className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-1.5 rounded-lg transition"
+              >
+                Delete
+              </button>
             </div>
           )}
         </div>
 
-        {/* BUTTON */}
+        {/* SAVE */}
         <button
           onClick={handleUpdate}
           disabled={loading}
-          className="bg-orange-600 hover:bg-orange-700 px-8 py-3 rounded-xl font-semibold disabled:opacity-50"
+          className="bg-orange-600 hover:bg-orange-700 px-8 py-3 rounded-xl font-semibold disabled:opacity-50 transition"
         >
           {loading ? "Updating..." : "Update Payment"}
         </button>
 
       </div>
-
     </div>
   )
 }

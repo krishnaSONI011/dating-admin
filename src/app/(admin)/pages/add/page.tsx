@@ -5,6 +5,8 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 import TextEditor from "@/components/TextEditor"
+import { Label } from "recharts"
+import TextArea from "@/components/form/input/TextArea"
 
 export default function AddPages() {
 
@@ -16,6 +18,7 @@ export default function AddPages() {
     const [metaDescription , setmetaDescription] = useState('')
     const [categories, setCategories] = useState<any[]>([])
     const [cities, setCities] = useState<any[]>([])
+    const [keyword , setKeyword] = useState<any>('')
     const [selectedCategory, setSelectedCategory] = useState("")
     const [selectedCity, setSelectedCity] = useState("")
     const [loading, setLoading] = useState(false)
@@ -68,6 +71,7 @@ export default function AddPages() {
             formData.append("cat_slug", selectedCategory)
             formData.append("city_slug", selectedCity)
             formData.append("area_slug", "") // empty as per API
+            formData.append("keyword" , keyword)
 
             const res = await api.post('/Wb/add_pages', formData)
 
@@ -129,6 +133,16 @@ export default function AddPages() {
                     onChange={(e) => setmetaDescription(e.target.value)}
                     className="w-full bg-gray-900 border border-gray-700 p-2 rounded"
                     placeholder="Enter page title"
+                />
+                
+            </div>
+            <div className="mt-5">
+            <label className="block mb-2 text-gray-300">Meta Keyword</label>
+                <TextArea
+                    name="keyword"
+                    value={keyword}
+                    onChange={(val) => setKeyword(val)}
+                    placeholder="Keywords"
                 />
             </div>
 
